@@ -1,0 +1,2021 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taste Twist Terminal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#0a1220;
+    --surface:#121d33;
+    --surface-2:#1b2a48;
+    --surface-3:#26395e;
+    --line:#2c4066;
+    --text:#eaf1ff;
+    --text-dim:#8fa3c8;
+    --accent:#3d7ce0;
+    --accent-hover:#5b96ec;
+    --accent-ink:#061a33;
+    --gold:#f0a13a;
+    --good:#59b37d;
+    --warn:#d9a441;
+    --bad:#e0594a;
+    --grad-accent:linear-gradient(135deg, #4f8ce8, #2f66c9);
+    --grad-gold:linear-gradient(135deg, #f6bb66, #e8901f);
+    --glass-bg:rgba(20,32,56,0.5);
+    --glass-sheen:rgba(255,255,255,0.06);
+    --glass-border:rgba(255,255,255,0.10);
+    --glass-blur:blur(20px);
+    --shadow-sm:0 2px 10px rgba(0,0,0,0.28);
+    --shadow-md:0 10px 28px rgba(0,0,0,0.4);
+    --shadow-lg:0 24px 70px rgba(0,0,0,0.55);
+    --font-display:"Bricolage Grotesque", "Segoe UI", sans-serif;
+    --font-body:"Work Sans", "Segoe UI", sans-serif;
+    --font-mono:"JetBrains Mono", "Consolas", monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before, body::after{
+    content:"";position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(80px);
+  }
+  body::before{
+    width:60vw;height:60vw;max-width:700px;max-height:700px;top:-18vw;left:-14vw;
+    background:radial-gradient(circle, rgba(61,124,224,0.38), transparent 70%);
+    animation:blob-drift-1 22s ease-in-out infinite alternate;
+  }
+  body::after{
+    width:50vw;height:50vw;max-width:600px;max-height:600px;bottom:-16vw;right:-12vw;
+    background:radial-gradient(circle, rgba(240,161,58,0.16), transparent 70%);
+    animation:blob-drift-2 26s ease-in-out infinite alternate;
+  }
+  @keyframes blob-drift-1{from{transform:translate(0,0) scale(1);}to{transform:translate(6vw,4vw) scale(1.08);}}
+  @keyframes blob-drift-2{from{transform:translate(0,0) scale(1);}to{transform:translate(-5vw,-4vw) scale(1.05);}}
+  #app{position:relative;z-index:1;}
+  ::selection{background:var(--accent);color:var(--accent-ink);}
+  button, input, select{font-family:inherit;font-size:inherit;color:inherit;}
+  button{cursor:pointer;}
+  a{color:var(--gold);}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-track{background:var(--surface);}
+  ::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:6px;}
+
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:700;text-wrap:balance;margin:0;}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;transition-duration:0.001ms !important;}
+  }
+
+  /* ---------- boot / login ---------- */
+  #boot{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:14px;color:var(--text-dim);
+  }
+  .boot-mark{font-size:40px;}
+  .spinner{width:22px;height:22px;border-radius:50%;border:3px solid var(--surface-3);border-top-color:var(--accent);animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px;position:relative;overflow:hidden;}
+  .login-card{
+    width:100%;max-width:420px;
+    background:linear-gradient(160deg, var(--glass-sheen), transparent 45%), var(--glass-bg);
+    backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border);
+    border-radius:20px;padding:38px 34px;box-shadow:var(--shadow-lg);position:relative;
+  }
+  .login-screen::before{
+    content:"";position:absolute;top:-20%;left:50%;transform:translateX(-50%);
+    width:900px;height:600px;pointer-events:none;
+    background:radial-gradient(circle, rgba(61,124,224,0.16), transparent 65%);
+  }
+  .brand-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;position:relative;}
+  .brand-mark{font-size:36px;line-height:1;filter:drop-shadow(0 4px 16px rgba(61,124,224,0.55));}
+  .login-card h1{font-size:26px;}
+  .login-sub{color:var(--text-dim);font-size:14px;margin:6px 0 26px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
+  .field input, .field select{
+    width:100%;padding:11px 13px;border-radius:9px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--text);
+  }
+  .field input:focus, .field select:focus{border-color:var(--accent);}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:11px 20px;border-radius:9px;border:1px solid transparent;
+    font-weight:600;font-size:14px;transition:filter .15s ease, transform .12s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .btn:active{transform:translateY(1px) scale(0.99);}
+  .btn-primary{background:var(--grad-accent);color:var(--accent-ink);box-shadow:0 4px 14px rgba(61,124,224,0.28);position:relative;overflow:hidden;}
+  .btn-primary::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.35) 48%, transparent 66%);
+    transform:translateX(-100%);transition:transform .5s ease;
+  }
+  .btn-primary:hover::after{transform:translateX(100%);}
+  .btn-primary:hover{filter:brightness(1.08);box-shadow:0 6px 20px rgba(61,124,224,0.4);transform:translateY(-1px);}
+  .btn-primary:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;filter:none;transform:none;}
+  .btn-ghost{background:transparent;border-color:var(--line);color:var(--text);}
+  .btn-ghost:hover{border-color:var(--accent);background:rgba(61,124,224,0.06);}
+  .btn-danger{background:linear-gradient(135deg,#d1573e,#b23a2a);color:#fff0eb;box-shadow:0 4px 14px rgba(178,58,42,0.25);}
+  .btn-danger:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .btn-block{width:100%;}
+  .btn-sm{padding:7px 12px;font-size:12.5px;border-radius:7px;}
+  .login-error{background:rgba(224,89,74,0.15);border:1px solid var(--bad);color:#f3c6bc;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:16px;}
+  .creds-box{margin-top:24px;border-top:1px dashed var(--line);padding-top:18px;font-size:12px;color:var(--text-dim);}
+  .creds-box summary{cursor:pointer;font-weight:600;color:var(--gold);}
+  .creds-box table{margin-top:10px;width:100%;border-collapse:collapse;}
+  .creds-box td{padding:3px 6px 3px 0;font-family:var(--font-mono);}
+
+  /* ---------- app shell ---------- */
+  .shell{display:flex;min-height:100vh;}
+  .rail{
+    width:224px;flex:none;
+    background:linear-gradient(160deg, var(--glass-sheen), transparent 50%), var(--glass-bg);
+    backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+    border-right:1px solid var(--glass-border);
+    display:flex;flex-direction:column;padding:20px 14px;gap:4px;
+    box-shadow:var(--shadow-md);position:relative;z-index:2;
+  }
+  .rail-brand{display:flex;align-items:center;gap:10px;padding:6px 8px 20px;}
+  .rail-brand .brand-mark{font-size:26px;filter:drop-shadow(0 2px 8px rgba(61,124,224,0.5));}
+  .rail-brand-text{font-family:var(--font-display);font-weight:800;font-size:16px;line-height:1.15;letter-spacing:-0.01em;}
+  .rail-user{
+    background:linear-gradient(160deg, var(--glass-sheen), transparent 50%), rgba(255,255,255,0.03);
+    border:1px solid var(--glass-border);border-radius:12px;padding:12px 13px;margin-bottom:18px;
+  }
+  .rail-user-name{font-weight:700;font-size:13.5px;}
+  .rail-user-role{font-size:11px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:0.04em;}
+  .rail-branch-pill{
+    display:inline-block;margin-top:7px;font-size:10.5px;font-weight:700;letter-spacing:0.03em;
+    text-transform:uppercase;background:rgba(61,124,224,0.18);color:var(--accent-hover);
+    padding:3px 9px;border-radius:999px;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;
+    color:var(--text-dim);font-weight:600;font-size:13.5px;border:1px solid transparent;
+    background:transparent;text-align:left;width:100%;position:relative;
+    transition:color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .nav-item:hover{color:var(--text);background:var(--surface-2);transform:translateX(2px);}
+  .nav-item.active{color:#f3f8ff;background:var(--grad-accent);box-shadow:0 4px 14px rgba(61,124,224,0.32);}
+  .nav-item.active svg{filter:none;}
+  .nav-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .nav-icon svg{width:17px;height:17px;}
+  .rail-spacer{flex:1;}
+  .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:6px;box-shadow:0 0 0 3px rgba(89,179,125,0.18);animation:pulse-dot 2.4s ease-in-out infinite;}
+  @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:0.5;}}
+  .rail-foot{font-size:11px;color:var(--text-dim);padding:0 8px 8px;}
+
+  .main{flex:1;min-width:0;padding:28px 34px;overflow-y:auto;height:100vh;}
+  .main.view-enter{animation:view-in .28s ease;}
+  @keyframes view-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .view-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+  .view-head h2{font-size:24px;}
+  .view-sub{color:var(--text-dim);font-size:13.5px;margin-top:4px;}
+
+  .card{
+    background:linear-gradient(160deg, var(--glass-sheen), transparent 40%), var(--glass-bg);
+    backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border);border-radius:16px;padding:20px;box-shadow:var(--shadow-sm);
+  }
+  .grid{display:grid;gap:16px;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px;}
+  .tile{
+    background:linear-gradient(160deg, var(--glass-sheen), transparent 40%), var(--glass-bg);
+    backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow-sm);
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:rgba(61,124,224,0.4);}
+  .tile-label{font-size:11.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);font-weight:600;}
+  .tile-value{font-family:var(--font-mono);font-size:26px;font-weight:700;margin-top:6px;}
+  .tile-value.good{color:var(--good);}
+  .tile-value.bad{color:var(--bad);}
+  .tile-value.accent{color:var(--gold);}
+  .tile-sub{font-size:12px;color:var(--text-dim);margin-top:4px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-dim);padding:0 12px 10px;font-weight:600;border-bottom:1px solid var(--line);}
+  td{padding:10px 12px;border-bottom:1px solid rgba(74,57,42,0.5);}
+  tbody tr{transition:background .12s ease;}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+  tr:last-child td{border-bottom:none;}
+  .table-wrap{overflow-x:auto;}
+  .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:right;}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;}
+  .pill-good{background:rgba(89,179,125,0.18);color:var(--good);}
+  .pill-warn{background:rgba(217,164,65,0.18);color:var(--warn);}
+  .pill-bad{background:rgba(224,89,74,0.2);color:#f5a99c;animation:pill-pulse 2.2s ease-in-out infinite;}
+  @keyframes pill-pulse{0%,100%{box-shadow:0 0 0 0 rgba(224,89,74,0.35);}50%{box-shadow:0 0 0 4px rgba(224,89,74,0);}}
+  .pill-dim{background:var(--surface-3);color:var(--text-dim);}
+
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px;}
+
+  /* ---------- checkout ---------- */
+  .checkout-layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;}
+  .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+  .item-card{
+    background:linear-gradient(160deg, var(--glass-sheen), transparent 40%), var(--glass-bg);
+    backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border);border-radius:13px;padding:14px;
+    text-align:left;display:flex;flex-direction:column;gap:8px;min-height:104px;
+    box-shadow:var(--shadow-sm);transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .item-card:not(:disabled):hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:var(--shadow-md);}
+  .item-card:not(:disabled):active{transform:translateY(-1px) scale(0.98);}
+  .item-card:disabled{opacity:0.35;cursor:not-allowed;box-shadow:none;}
+  .item-name{font-weight:700;font-size:14px;}
+  .item-meta{font-size:11.5px;color:var(--text-dim);}
+  .item-price{font-family:var(--font-mono);color:var(--gold);font-weight:700;font-size:14px;margin-top:auto;}
+
+  .cart{position:sticky;top:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 56px);}
+  .qty-stepper{display:flex;align-items:center;gap:6px;}
+  .qty-stepper button{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);font-weight:700;line-height:1;}
+  .qty-stepper span{font-family:var(--font-mono);min-width:18px;text-align:center;}
+  .cart-empty{color:var(--text-dim);font-size:13px;text-align:center;padding:30px 10px;}
+  .cart-total-row{display:flex;justify-content:space-between;align-items:baseline;padding-top:10px;border-top:1px solid var(--line);}
+  .cart-total-label{font-size:12.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;}
+  .cart-total-value{font-family:var(--font-mono);font-size:24px;font-weight:700;color:var(--gold);}
+  .remove-x{background:none;border:none;color:var(--text-dim);font-size:15px;padding:2px 4px;}
+  .remove-x:hover{color:var(--bad);}
+
+  .pos-topbar{display:flex;gap:14px;align-items:center;color:var(--text-dim);font-size:12.5px;font-family:var(--font-mono);margin-bottom:14px;flex-wrap:wrap;}
+  .pos-topbar b{color:var(--text);font-family:var(--font-body);font-weight:700;}
+  .invoice-table th, .invoice-table td{padding:8px 10px;}
+  .invoice-table tfoot td{border-top:1px solid var(--line);border-bottom:none;font-weight:700;padding-top:10px;}
+  .pay-rows{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+  .pay-row{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:8px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.03);color:var(--text);font-size:13px;font-weight:600;text-align:left;transition:all .15s ease;}
+  .pay-row:hover{background:rgba(255,255,255,0.06);}
+  .pay-row.active{border-color:var(--accent);background:rgba(61,124,224,0.16);box-shadow:0 0 0 1px rgba(61,124,224,0.3);}
+  .keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0;}
+  .keypad button{padding:12px 0;border-radius:8px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.03);color:var(--text);font-family:var(--font-mono);font-size:15px;font-weight:700;transition:transform .1s ease, background .15s ease, border-color .15s ease;}
+  .keypad button:hover{border-color:var(--accent);background:rgba(61,124,224,0.1);}
+  .keypad button:active{transform:scale(0.92);}
+  .keypad button:hover{border-color:var(--accent);}
+  .keypad button.kp-zero{grid-column:span 3;}
+  .keypad button.kp-clear{color:var(--bad);}
+  .totals-panel{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 0;margin:4px 0;display:flex;flex-direction:column;gap:8px;}
+  .trow{display:flex;justify-content:space-between;align-items:center;font-size:13px;}
+  .trow.total .tval{font-size:20px;font-weight:700;color:var(--gold);}
+  .trow.change .tval{font-size:16px;font-weight:700;}
+  .trow input{width:120px;text-align:right;padding:6px 10px;border-radius:7px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);font-family:var(--font-mono);}
+  .exact-btn{margin-left:6px;padding:5px 9px;font-size:11px;border-radius:6px;border:1px solid var(--line);background:var(--surface-3);color:var(--text-dim);}
+
+  /* ---------- receipt ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(10,7,5,0.7);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px;}
+  .receipt{
+    background:linear-gradient(160deg, var(--glass-sheen), transparent 45%), var(--glass-bg);
+    backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border);border-radius:14px;
+    width:100%;max-width:340px;padding:26px 24px;font-family:var(--font-mono);
+    box-shadow:var(--shadow-lg);animation:modal-in .2s ease;
+  }
+  .receipt h3{font-family:var(--font-display);text-align:center;}
+  .receipt .rline{display:flex;justify-content:space-between;font-size:12.5px;margin-top:6px;}
+  .receipt hr{border:none;border-top:1px dashed var(--line);margin:12px 0;}
+  .receipt .rtotal{font-size:18px;font-weight:700;color:var(--gold);}
+
+  /* ---------- forms ---------- */
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(10,7,5,0.65);display:flex;align-items:center;justify-content:center;z-index:40;padding:20px;}
+  .modal{
+    background:linear-gradient(160deg, var(--glass-sheen), transparent 45%), var(--glass-bg);
+    backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border);border-radius:18px;padding:26px;width:100%;max-width:420px;
+    box-shadow:var(--shadow-lg);animation:modal-in .18s ease;
+  }
+  .modal-backdrop, .overlay{backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+  @keyframes modal-in{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+  .modal h3{margin-bottom:18px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+
+  .empty-state{color:var(--text-dim);font-size:13.5px;padding:26px;text-align:center;}
+  .banner{padding:10px 14px;border-radius:9px;font-size:13px;margin-bottom:16px;}
+  .banner-bad{background:rgba(224,89,74,0.15);border:1px solid var(--bad);color:#f3c6bc;}
+  .banner-good{background:rgba(89,179,125,0.15);border:1px solid var(--good);color:#d9e8c9;}
+
+  .bar-chart-wrap{overflow-x:auto;}
+  .low-stock-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);}
+  .low-stock-row:last-child{border-bottom:none;}
+  .low-stock-name{flex:1;font-size:13px;font-weight:600;}
+  .low-stock-branch{font-size:11px;color:var(--text-dim);}
+
+  .seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;overflow:hidden;}
+  .seg button{padding:8px 16px;border:none;background:var(--surface-2);color:var(--text-dim);font-weight:600;font-size:13px;}
+  .seg button.active{background:var(--accent);color:var(--accent-ink);}
+  .line-form{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:16px;}
+  .line-form .field{margin-bottom:0;min-width:140px;}
+
+  @media (max-width: 880px){
+    .shell{flex-direction:column;}
+    .rail{width:100%;flex-direction:row;overflow-x:auto;align-items:center;}
+    .rail-spacer{display:none;}
+    .checkout-layout{grid-template-columns:1fr;}
+    .cart{position:static;max-height:none;}
+    .main{height:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="boot">
+    <div class="boot-mark">🌯</div>
+    <div class="spinner"></div>
+    <div>Connecting Taste Twist Terminal…</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var BRANCHES = []; // live — populated from the "branches" collection
+  var NGN = new Intl.NumberFormat("en-NG", {maximumFractionDigits: 0});
+  function money(n){ return "₦" + NGN.format(Math.round(n || 0)); }
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function todayISO(){ return new Date().toISOString().slice(0,10); }
+  function slug(s){ return String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"") || "item"; }
+  function stockId(branch, itemId){ return slug(branch) + "__" + itemId; }
+
+  var dbUnavailable = false;
+
+  var session = null; // {username, role, branch}
+  var view = "dashboard";
+  var banner = null; // {type:'good'|'bad', text}
+
+  var items = [];         // live items collection
+  var stockByKey = {};    // stockId -> {branch,itemId,itemName,qty}
+  var transfers = [];     // live transfers
+  var salesRecent = [];   // last ~30 days sales, for dashboard + reports
+  var suppliers = [];     // live suppliers
+  var purchasesRecent = []; // live purchase history
+  var branchDocs = [];    // live branches [{id,name}] — BRANCHES is derived from this
+  var usersCache = [];    // live users, for Settings
+  var menuItems = [];     // live sellable products: {id,name,price,recipe:[{itemId,qty}]}
+
+  var cart = [];           // [{itemId,name,price,qty,maxQty}]
+  var checkoutBranch = null;
+  var checkoutPayments = {}; // paymentMethod name -> amount string, e.g. {"Cash":"3000","Moniepoint":"2800"}
+  var checkoutActiveMethod = ""; // which row the on-screen keypad is currently typing into
+  var paymentMethods = []; // live payment channels, e.g. Cash/Moniepoint/Payforce/Nomba/GTB/Others
+  var receiptData = null;  // set right after a completed sale
+  var modal = null;        // {type:'item', editId?} etc.
+  var reportState = { branch: "All", groupBy: "Daily", from: "", to: "" };
+  var analyticsBranch = "All";
+  var analyticsWindow = "This Week";  // window for "top ingredients used"
+  var analyticsBucket = "Day";        // bucket size for the usage-trend chart
+  var analyticsIngredientId = "";     // selected ingredient for the usage-trend chart
+  var ledgerBranch = null;
+  var ledgerDate = null; // set to today on first render
+  var ledgerRows = null; // null = not loaded; else {itemId: {opening,stockIn,used,closing}}
+  var ledgerLoading = false;
+  var purchaseBranch = null;
+  var purchaseCart = [];   // [{itemId,name,cost,qty}]
+  var purchaseSupplierDraft = ""; // preserves the supplier field across "+ Add line" clicks
+  var menuFormRecipe = []; // working recipe while the Add/Edit Menu Item modal is open
+  var busy = false;
+
+  function setBanner(type, text){ banner = {type:type, text:text}; render(); setTimeout(function(){ banner=null; render(); }, 4500); }
+
+  // Native confirm()/prompt() are unreliable inside the artifact's sandboxed frame — these
+  // route through the app's own modal system instead, which is guaranteed to actually render.
+  function askConfirm(message, onConfirm){
+    modal = { type: "confirm", message: message, onConfirm: onConfirm };
+    render();
+  }
+  function askNumberPrompt(title, fields, onSubmit){
+    modal = { type: "numprompt", title: title, fields: fields, onSubmit: onSubmit };
+    render();
+  }
+
+  // ---------------------------------------------------------------- boot --
+  var API = ""; // same-origin — server serves this file too
+  function api(path, opts){
+    opts = opts || {};
+    return fetch(API + path, {
+      method: opts.method || "GET",
+      headers: opts.body ? { "Content-Type": "application/json" } : undefined,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    }).then(function(res){
+      if (!res.ok) return res.json().catch(function(){ return {}; }).then(function(e){
+        throw Object.assign(new Error(e.error || "Request failed"), { code: res.status });
+      });
+      return res.status === 204 ? null : res.json();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", boot);
+  boot();
+  function boot(){
+    if (window.__ttBooted) return;
+    window.__ttBooted = true;
+    fetchState().then(function(){
+      connectEvents();
+      render();
+    }).catch(function(){
+      dbUnavailable = true;
+      renderBootFailure();
+    });
+  }
+  function renderBootFailure(){
+    document.getElementById("app").innerHTML =
+      '<div id="boot"><div class="boot-mark">🌯</div>' +
+      '<div style="max-width:360px;text-align:center;">Could not reach the Taste Twist server. Check your connection and reload — if this keeps happening, the server may be down.</div></div>';
+  }
+
+  function fetchState(){
+    return api("/api/state").then(function(s){
+      items = s.items;
+      var next = {};
+      s.stock.forEach(function(row){ next[stockId(row.branch, row.itemId)] = row; });
+      stockByKey = next;
+      transfers = s.transfers;
+      salesRecent = s.sales;
+      suppliers = s.suppliers;
+      purchasesRecent = s.purchases;
+      branchDocs = s.branches;
+      BRANCHES = s.branches.map(function(b){ return b.name; });
+      usersCache = s.users;
+      menuItems = s.menuItems;
+      paymentMethods = s.paymentMethods;
+      if (!checkoutActiveMethod && paymentMethods.length) checkoutActiveMethod = paymentMethods[0].name;
+      render();
+    });
+  }
+  function connectEvents(){
+    var es = new EventSource(API + "/api/events");
+    var pending = null;
+    es.onmessage = function(){
+      // Coalesce bursts of changes (e.g. a transfer touching two stock rows) into one refetch.
+      if (pending) return;
+      pending = setTimeout(function(){ pending = null; fetchState(); }, 300);
+    };
+    es.onerror = function(){ /* EventSource auto-reconnects on its own */ };
+  }
+
+  // ------------------------------------------------------------- helpers --
+  function stockQty(branch, itemId){
+    var row = stockByKey[stockId(branch, itemId)];
+    return row ? (row.qty || 0) : 0;
+  }
+  function itemById(id){ return items.filter(function(i){ return i.id === id; })[0]; }
+  function menuItemById(id){ return menuItems.filter(function(m){ return m.id === id; })[0]; }
+  function activeSales(){ return salesRecent.filter(function(s){ return !s.voided; }); }
+
+  // Some ingredients (e.g. Bread, Hotdog) are counted as whole packs plus loose pieces rather
+  // than one plain number. The canonical stored qty is always a single number of pieces —
+  // these helpers only affect how it's displayed and edited for items with piecesPerPack set.
+  function formatQty(item, qty){
+    qty = qty || 0;
+    var ppp = item && item.piecesPerPack;
+    if (!ppp) return qty + (item&&item.unit ? " " + item.unit : "");
+    var packs = Math.floor(qty / ppp);
+    var pieces = round2(qty - packs*ppp);
+    return packs + " pack" + (packs===1?"":"s") + (pieces ? ", " + pieces + " pcs" : "");
+  }
+  function promptAbsoluteQty(item, currentQty, label, callback){
+    var ppp = item && item.piecesPerPack;
+    if (!ppp){
+      askNumberPrompt(label||"New value", [
+        { label: (label||"New value") + " (" + (item?item.unit:"") + ")", value: currentQty }
+      ], function(vals){
+        if (!isNaN(vals[0])) callback(vals[0]);
+      });
+      return;
+    }
+    var curPacks = Math.floor((currentQty||0) / ppp);
+    var curPieces = round2((currentQty||0) - curPacks*ppp);
+    askNumberPrompt(label||"New value", [
+      { label: "Whole packs (" + ppp + " pcs/pack)", value: curPacks },
+      { label: "Loose pieces on top of that", value: curPieces }
+    ], function(vals){
+      if (!isNaN(vals[0]) && !isNaN(vals[1])) callback(round2(vals[0]*ppp + vals[1]));
+    });
+  }
+  function promptDeltaQty(item, callback){
+    var ppp = item && item.piecesPerPack;
+    if (!ppp){
+      askNumberPrompt("Adjust stock", [
+        { label: "Adjust by how much? Negative to remove (" + (item?item.unit:"") + ")", value: 0 }
+      ], function(vals){
+        if (!isNaN(vals[0])) callback(vals[0]);
+      });
+      return;
+    }
+    askNumberPrompt("Adjust stock", [
+      { label: "Whole packs (" + ppp + " pcs/pack) — negative to remove", value: 0 },
+      { label: "Loose pieces on top of that — negative to remove", value: 0 }
+    ], function(vals){
+      if (!isNaN(vals[0]) && !isNaN(vals[1])) callback(round2(vals[0]*ppp + vals[1]));
+    });
+  }
+  function maxMakeable(branch, menuItem){
+    if (!menuItem.recipe || !menuItem.recipe.length) return 0;
+    var max = Infinity;
+    menuItem.recipe.forEach(function(r){
+      var have = stockQty(branch, r.itemId);
+      var possible = r.qty > 0 ? Math.floor(have / r.qty) : Infinity;
+      if (possible < max) max = possible;
+    });
+    return max === Infinity ? 0 : max;
+  }
+  // Which single ingredient is capping how many of this menu item can be made right now —
+  // so "Not enough stock" can name the actual thing to go restock, not just show a dead tile.
+  function limitingIngredient(branch, menuItem){
+    if (!menuItem.recipe || !menuItem.recipe.length) return null;
+    var worst = null, worstPossible = Infinity;
+    menuItem.recipe.forEach(function(r){
+      var have = stockQty(branch, r.itemId);
+      var possible = r.qty > 0 ? Math.floor(have / r.qty) : Infinity;
+      if (possible < worstPossible){ worstPossible = possible; worst = r.itemId; }
+    });
+    return itemById(worst);
+  }
+  function recipeSummary(menuItem){
+    var parts = (menuItem.recipe||[]).map(function(r){
+      var ing = itemById(r.itemId);
+      return r.qty + (ing ? " " + ing.unit : "") + " " + (ing ? ing.name : "?");
+    });
+    return parts.length ? parts.join(" + ") : "No recipe set";
+  }
+  function isMaster(){ return session && session.role === "master"; }
+  function visibleBranches(){ return isMaster() ? BRANCHES : [session.branch]; }
+
+  // --------------------------------------------------------------- login --
+  function renderLogin(){
+    return (
+      '<div class="login-screen"><div class="login-card">' +
+        '<div class="brand-row"><span class="brand-mark">🌯</span><h1>Taste Twist</h1></div>' +
+        '<div class="login-sub">Terminal &mdash; live stock, sales &amp; transfers across every branch</div>' +
+        (banner && banner.type==="bad" ? '<div class="login-error">'+esc(banner.text)+'</div>' : '') +
+        '<form id="loginForm">' +
+          '<div class="field"><label>Username</label><input id="loginUser" autocomplete="username" autofocus></div>' +
+          '<div class="field"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password"></div>' +
+          '<button class="btn btn-primary btn-block" type="submit">Log in</button>' +
+        '</form>' +
+        '<details class="creds-box"><summary>Demo credentials</summary><table>' +
+          '<tr><td>master</td><td>admin123</td><td>Master</td></tr>' +
+          '<tr><td>staff</td><td>1234</td><td>Aguda (Surulere)</td></tr>' +
+          '<tr><td>staff_kilo</td><td>1234</td><td>Kilo</td></tr>' +
+          '<tr><td>staff_arepo</td><td>1234</td><td>Arepo</td></tr>' +
+        '</table></details>' +
+      '</div></div>'
+    );
+  }
+  function wireLogin(){
+    var f = document.getElementById("loginForm");
+    if (!f) return;
+    f.addEventListener("submit", function(e){
+      e.preventDefault();
+      var u = document.getElementById("loginUser").value.trim();
+      var p = document.getElementById("loginPass").value;
+      if (!u || !p){ setBanner("bad","Enter a username and password."); return; }
+      api("/api/login", { method: "POST", body: { username: u, password: p } }).then(function(d){
+        session = { username: d.username, role: d.role, branch: d.branch || null };
+        checkoutBranch = session.branch || BRANCHES[0];
+        view = isMaster() ? "dashboard" : "checkout";
+        render();
+      }).catch(function(err){
+        setBanner("bad", err.code === 401 ? "Invalid username or password." : "Could not reach the server. Try again.");
+      });
+    });
+  }
+
+  // --------------------------------------------------------------- shell --
+  var NAV_MASTER = [
+    {id:"dashboard", label:"Dashboard", icon:"dashboard"},
+    {id:"checkout", label:"Checkout", icon:"checkout"},
+    {id:"menu", label:"Menu", icon:"menu"},
+    {id:"purchases", label:"Purchases", icon:"purchases"},
+    {id:"items", label:"Ingredients", icon:"ingredients"},
+    {id:"ledger", label:"Daily Stock", icon:"ledger"},
+    {id:"transfers", label:"Transfers", icon:"transfers"},
+    {id:"reports", label:"Reports", icon:"reports"},
+    {id:"analytics", label:"Usage", icon:"analytics"},
+    {id:"settings", label:"Settings", icon:"settings"}
+  ];
+  var NAV_STAFF = [
+    {id:"checkout", label:"Checkout", icon:"checkout"},
+    {id:"purchases", label:"Purchases", icon:"purchases"},
+    {id:"stock", label:"My Stock", icon:"ingredients"},
+    {id:"ledger", label:"Daily Stock", icon:"ledger"},
+    {id:"transfers", label:"Transfers", icon:"transfers"}
+  ];
+
+  var ICON_PATHS = {
+    dashboard: '<rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/>',
+    checkout: '<path d="M6 8h12l-1.2 11.2a1.5 1.5 0 0 1-1.5 1.3H8.7a1.5 1.5 0 0 1-1.5-1.3L6 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+    menu: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/>',
+    purchases: '<path d="M12 3v12"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 16.5v3a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-3"/>',
+    ingredients: '<path d="M3.5 8L12 3.5 20.5 8 12 12.5 3.5 8z"/><path d="M3.5 8v8.5L12 21l8.5-4.5V8"/><path d="M12 12.5V21"/>',
+    ledger: '<path d="M7 4.5h10a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1z"/><path d="M9 3.5h6v2H9z"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4.5"/>',
+    transfers: '<path d="M6.5 8H18l-3-3"/><path d="M17.5 16H6l3 3"/>',
+    reports: '<path d="M4.5 20V13"/><path d="M11 20V6.5"/><path d="M17.5 20v-8.5"/><path d="M3 20h18"/>',
+    analytics: '<path d="M3.5 16l5-5 4 4 7-7"/><path d="M15 8h4.5v4.5"/>',
+    settings: '<circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2.7M12 17.8v2.7M4.9 4.9l1.9 1.9M17.2 17.2l1.9 1.9M3.5 12h2.7M17.8 12h2.7M4.9 19.1l1.9-1.9M17.2 6.8l1.9-1.9"/>',
+    logout: '<path d="M9.5 20H6a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 6 4h3.5"/><path d="M15.5 16.5L20 12l-4.5-4.5"/><path d="M20 12H9.5"/>'
+  };
+  function icon(name){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (ICON_PATHS[name]||"") + '</svg>';
+  }
+
+  var lastRenderedView = null;
+  function renderShell(){
+    var isNewView = (view !== lastRenderedView);
+    lastRenderedView = view;
+    var nav = isMaster() ? NAV_MASTER : NAV_STAFF;
+    var navHtml = nav.map(function(n){
+      return '<button class="nav-item ' + (view===n.id?"active":"") + '" data-nav="'+n.id+'">' +
+             '<span class="nav-icon">'+icon(n.icon)+'</span>'+n.label+'</button>';
+    }).join("");
+
+    var body;
+    if (view === "dashboard") body = renderDashboard();
+    else if (view === "checkout") body = renderCheckout();
+    else if (view === "menu") body = isMaster() ? renderMenu() : "<div class=\"empty-state\">Master access only.</div>";
+    else if (view === "items") body = renderItems();
+    else if (view === "transfers") body = renderTransfers();
+    else if (view === "reports") body = renderReports();
+    else if (view === "stock") body = renderStaffStock();
+    else if (view === "ledger") body = renderLedger();
+    else if (view === "purchases") body = renderPurchases();
+    else if (view === "settings") body = isMaster() ? renderSettings() : "<div class=\"empty-state\">Master access only.</div>";
+    else if (view === "analytics") body = isMaster() ? renderAnalytics() : "<div class=\"empty-state\">Master access only.</div>";
+    else body = "";
+
+    return (
+      '<div class="shell">' +
+        '<div class="rail">' +
+          '<div class="rail-brand"><span class="brand-mark">🌯</span><span class="rail-brand-text">Taste Twist<br>Terminal</span></div>' +
+          '<div class="rail-user">' +
+            '<div class="rail-user-name">' + esc(session.username) + '</div>' +
+            '<div class="rail-user-role">' + (isMaster() ? "Master" : "Branch Staff") + '</div>' +
+            (session.branch ? '<span class="rail-branch-pill">' + esc(session.branch) + '</span>' : '') +
+          '</div>' +
+          navHtml +
+          '<div class="rail-spacer"></div>' +
+          '<div class="rail-foot"><span class="live-dot"></span>Live data connected</div>' +
+          '<button class="btn btn-ghost btn-block btn-sm" id="logoutBtn"><span class="nav-icon">'+icon("logout")+'</span>Log out</button>' +
+        '</div>' +
+        '<div class="main' + (isNewView ? ' view-enter' : '') + '">' +
+          (banner ? '<div class="banner banner-' + (banner.type==="bad"?"bad":"good") + '">' + esc(banner.text) + '</div>' : '') +
+          body +
+        '</div>' +
+      (modal ? renderModal() : "") +
+      (receiptData ? renderReceipt() : "") +
+      '</div>'
+    );
+  }
+
+  // ------------------------------------------------------------ dashboard --
+  function renderDashboard(){
+    var lowStock = [], excessStock = [];
+    items.forEach(function(it){
+      BRANCHES.forEach(function(b){
+        var q = stockQty(b, it.id);
+        if (q < (it.minStock || 0)) lowStock.push({name: it.name, branch: b, qty: q, min: it.minStock});
+        if (it.maxStock && q > it.maxStock) excessStock.push({name: it.name, branch: b, qty: q, max: it.maxStock});
+      });
+    });
+
+    var byDay = {};
+    activeSales().forEach(function(s){
+      var day = (s.ts || "").slice(0,10);
+      byDay[day] = (byDay[day] || 0) + (s.total || 0);
+    });
+    var days = [];
+    for (var i=6; i>=0; i--){
+      var d = new Date(Date.now() - i*24*3600*1000).toISOString().slice(0,10);
+      days.push({day:d, revenue: byDay[d] || 0});
+    }
+    var maxRev = Math.max.apply(null, days.map(function(d){return d.revenue;}).concat([1]));
+
+    var todayStr = todayISO();
+    var branchCards = BRANCHES.map(function(b){
+      var rev = activeSales().filter(function(s){ return s.branch===b && (s.ts||"").slice(0,10)===todayStr; })
+                            .reduce(function(a,s){ return a+(s.total||0); }, 0);
+      var low = lowStock.filter(function(l){ return l.branch===b; }).length;
+      var excess = excessStock.filter(function(l){ return l.branch===b; }).length;
+      var badges = [];
+      if (low) badges.push('<span class="pill pill-bad">' + low + ' low</span>');
+      if (excess) badges.push('<span class="pill pill-warn">' + excess + ' excess</span>');
+      if (!badges.length) badges.push('<span class="pill pill-good">stock OK</span>');
+      return '<div class="tile"><div class="tile-label">' + esc(b) + '</div>' +
+             '<div class="tile-value accent">' + money(rev) + '</div>' +
+             '<div class="tile-sub">today\'s revenue</div>' +
+             '<div class="tile-sub">' + badges.join(" ") + '</div>' +
+             '</div>';
+    }).join("");
+
+    var chartW = 560, chartH = 160, padL = 36, padB = 24, barGap = 14;
+    var barW = (chartW - padL - 10 - barGap*(days.length-1)) / days.length;
+    var bars = days.map(function(d, idx){
+      var h = Math.round((d.revenue / maxRev) * (chartH - padB - 16));
+      var x = padL + idx*(barW+barGap);
+      var y = chartH - padB - h;
+      var label = d.day.slice(5).replace("-","/");
+      return '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+Math.max(h,2)+'" rx="4" fill="var(--accent)"></rect>' +
+             '<text x="'+(x+barW/2)+'" y="'+(chartH-6)+'" text-anchor="middle" fill="var(--text-dim)" font-size="10" font-family="var(--font-mono)">'+label+'</text>';
+    }).join("");
+    var gridY = chartH - padB;
+    var chartSvg = '<svg viewBox="0 0 '+chartW+' '+chartH+'" style="width:100%;height:auto;max-width:'+chartW+'px;">' +
+      '<line x1="'+padL+'" y1="'+gridY+'" x2="'+chartW+'" y2="'+gridY+'" stroke="var(--line)"></line>' +
+      bars + '</svg>';
+
+    var lowHtml = lowStock.length ? lowStock.map(function(l){
+      return '<div class="low-stock-row"><span class="pill pill-bad">low</span>' +
+        '<span class="low-stock-name">' + esc(l.name) + '</span>' +
+        '<span class="low-stock-branch">' + esc(l.branch) + '</span>' +
+        '<span class="num mono">' + l.qty + ' / min ' + l.min + '</span></div>';
+    }).join("") : '<div class="empty-state">Every branch is above its minimum stock level.</div>';
+
+    var excessHtml = excessStock.length ? excessStock.map(function(l){
+      return '<div class="low-stock-row"><span class="pill pill-warn">excess</span>' +
+        '<span class="low-stock-name">' + esc(l.name) + '</span>' +
+        '<span class="low-stock-branch">' + esc(l.branch) + '</span>' +
+        '<span class="num mono">' + l.qty + ' / max ' + l.max + '</span></div>';
+    }).join("") : '<div class="empty-state">Nothing is over its maximum stock level.' + (items.some(function(it){return it.maxStock;}) ? '' : ' (Set a max stock per ingredient to track this.)') + '</div>';
+
+    return (
+      '<div class="view-head"><div><h2>Master Dashboard</h2><div class="view-sub">Live across all branches &mdash; updates as staff ring up sales and input their own stock</div></div></div>' +
+      '<div class="tiles">' + branchCards + '</div>' +
+      '<div class="grid" style="grid-template-columns:1.3fr 1fr;">' +
+        '<div class="card"><h3 style="margin-bottom:14px;">Revenue, last 7 days</h3>' + chartSvg + '</div>' +
+        '<div class="card" style="display:flex;flex-direction:column;gap:16px;">' +
+          '<div><h3 style="margin-bottom:6px;">Low stock</h3>' + lowHtml + '</div>' +
+          '<div><h3 style="margin-bottom:6px;">Excess stock</h3>' + excessHtml + '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderStaffStock(){
+    var b = session.branch;
+    var rows = items.map(function(it){
+      var q = stockQty(b, it.id);
+      var low = q < (it.minStock || 0);
+      var excess = it.maxStock && q > it.maxStock;
+      var status = low ? '<span class="pill pill-bad">low</span>' : excess ? '<span class="pill pill-warn">excess</span>' : '<span class="pill pill-good">ok</span>';
+      return '<tr><td>' + esc(it.name) + '</td>' +
+        '<td class="num mono">' + esc(formatQty(it, q)) + '</td>' +
+        '<td>' + status + '</td></tr>';
+    }).join("");
+    return (
+      '<div class="view-head"><div><h2>Stock — ' + esc(b) + '</h2><div class="view-sub">Live quantities on hand — record your day\'s Opening, Stock In, Used and Closing in Daily Stock</div></div></div>' +
+      '<div class="card table-wrap"><table><thead><tr><th>Item</th><th style="text-align:right;">On hand</th><th>Status</th></tr></thead><tbody>' + (rows || '<tr><td colspan="3" class="empty-state">No ingredients yet.</td></tr>') + '</tbody></table></div>'
+    );
+  }
+
+  // ---------------------------------------------------------------- ledger --
+  function round2(n){ return Math.round((n||0)*100)/100; }
+
+  function loadLedger(){
+    if (!ledgerBranch) ledgerBranch = session.branch || BRANCHES[0];
+    if (!ledgerDate) ledgerDate = todayISO();
+    var branch = ledgerBranch, date = ledgerDate;
+    ledgerLoading = true;
+    render();
+
+    var prevDate = new Date(date + "T00:00:00");
+    prevDate.setDate(prevDate.getDate() - 1);
+    var prevDateStr = prevDate.toISOString().slice(0,10);
+
+    Promise.all([
+      api("/api/stock-ledger/" + encodeURIComponent(branch) + "/" + date),
+      api("/api/stock-ledger/" + encodeURIComponent(branch) + "/" + prevDateStr)
+    ]).then(function(res){
+      var todayDoc = res[0], prevDoc = res[1];
+      var savedRows = todayDoc ? (todayDoc.rows || {}) : null;
+      var prevRows = prevDoc ? (prevDoc.rows || {}) : {};
+      var map = {};
+      items.forEach(function(it){
+        if (savedRows && savedRows[it.id]){
+          map[it.id] = savedRows[it.id];
+          return;
+        }
+        var opening = prevRows[it.id] ? (prevRows[it.id].closing || 0) : 0;
+        var stockIn = purchasesRecent.filter(function(p){
+          return p.branch === branch && (p.ts||"").slice(0,10) === date;
+        }).reduce(function(a,p){
+          var line = (p.items||[]).filter(function(li){ return li.itemId === it.id; })[0];
+          return a + (line ? line.qty : 0);
+        }, 0);
+        var used = activeSales().filter(function(s){
+          return s.branch === branch && (s.ts||"").slice(0,10) === date;
+        }).reduce(function(a,s){ return a + ingredientQtyFromSale(s, it.id); }, 0);
+        map[it.id] = { opening: round2(opening), stockIn: round2(stockIn), used: round2(used), closing: round2(opening + stockIn - used) };
+      });
+      ledgerRows = map;
+      ledgerLoading = false;
+      render();
+    }).catch(function(){
+      ledgerLoading = false;
+      setBanner("bad","Could not load the daily stock ledger.");
+      render();
+    });
+  }
+
+  function saveLedger(){
+    if (!ledgerRows) return;
+    var branch = ledgerBranch, date = ledgerDate;
+    api("/api/stock-ledger/" + encodeURIComponent(branch) + "/" + date, {
+      method: "PUT",
+      body: { rows: ledgerRows, recordedBy: session.username }
+    }).then(function(){
+      setBanner("good","Day saved — live stock now matches these closing counts.");
+      render();
+    }).catch(function(err){
+      setBanner("bad","Could not save the ledger (" + (err.message || "error") + ").");
+    });
+  }
+
+  function renderLedger(){
+    if (!ledgerBranch) ledgerBranch = session.branch || BRANCHES[0];
+    if (!ledgerDate) ledgerDate = todayISO();
+    var branchOptions = visibleBranches().map(function(b){
+      return '<option value="'+esc(b)+'"'+(b===ledgerBranch?" selected":"")+'>'+esc(b)+'</option>';
+    }).join("");
+    var controls = '<div class="toolbar">' +
+      (isMaster() ? '<select id="ledgerBranchSel">'+branchOptions+'</select>' : '') +
+      '<input type="date" id="ledgerDateInput" value="'+ledgerDate+'">' +
+      '<button class="btn btn-primary btn-sm" id="loadLedgerBtn">'+(ledgerRows?"Reload":"Load")+'</button>' +
+    '</div>';
+
+    if (ledgerLoading){
+      return '<div class="view-head"><div><h2>Daily Stock</h2></div></div>' + controls + '<div class="empty-state">Loading…</div>';
+    }
+    if (!ledgerRows){
+      return (
+        '<div class="view-head"><div><h2>Daily Stock</h2><div class="view-sub">Opening, stock in, used and closing stock — one row per ingredient, per day, per branch</div></div></div>' +
+        controls +
+        '<div class="empty-state">Pick a branch and date, then Load — Opening carries forward from the previous day\'s closing, Stock In is pulled from that day\'s Purchases, and Used from that day\'s checkout sales. Adjust anything to match your physical count.</div>'
+      );
+    }
+
+    var rows = items.map(function(it){
+      var r = ledgerRows[it.id] || {opening:0, stockIn:0, used:0, closing:0};
+      var expected = round2(r.opening + r.stockIn - r.used);
+      var variance = round2(r.closing - expected);
+      return '<tr><td>' + esc(it.name) + ' <span class="tile-sub">' + esc(it.unit||"") + '</span></td>' +
+        '<td class="num mono" data-ledger-edit="'+it.id+'|opening" style="cursor:pointer;text-decoration:underline dotted;">'+esc(formatQty(it, r.opening))+'</td>' +
+        '<td class="num mono" data-ledger-edit="'+it.id+'|stockIn" style="cursor:pointer;text-decoration:underline dotted;">'+esc(formatQty(it, r.stockIn))+'</td>' +
+        '<td class="num mono" data-ledger-edit="'+it.id+'|used" style="cursor:pointer;text-decoration:underline dotted;">'+esc(formatQty(it, r.used))+'</td>' +
+        '<td class="num mono" data-ledger-edit="'+it.id+'|closing" style="cursor:pointer;text-decoration:underline dotted;'+(variance?'color:var(--warn);':'')+'">'+esc(formatQty(it, r.closing))+'</td>' +
+        '<td>' + (variance ? '<span class="pill pill-warn">'+(variance>0?"+":"")+variance+'</span>' : '<span class="pill pill-good">matches</span>') + '</td>' +
+      '</tr>';
+    }).join("");
+
+    return (
+      '<div class="view-head"><div><h2>Daily Stock — ' + esc(ledgerBranch) + '</h2><div class="view-sub">' + ledgerDate + ' — click any number to correct it; Variance flags where your physical closing count differs from Opening + Stock In − Used</div></div></div>' +
+      controls +
+      '<div class="card table-wrap"><table><thead><tr><th>Ingredient</th><th style="text-align:right;">Opening</th><th style="text-align:right;">Stock In</th><th style="text-align:right;">Used</th><th style="text-align:right;">Closing</th><th>Variance</th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="6" class="empty-state">No ingredients yet.</td></tr>') +
+      '</tbody></table></div>' +
+      '<button class="btn btn-primary" id="saveLedgerBtn" style="margin-top:16px;">Save Day</button>'
+    );
+  }
+
+  // ------------------------------------------------------------ analytics --
+  function barChartSvg(bars){
+    var chartW = 640, chartH = 170, padL = 34, padB = 26, barGap = 10;
+    var n = Math.max(bars.length, 1);
+    var barW = Math.max((chartW - padL - 10 - barGap*(n-1)) / n, 4);
+    var maxVal = Math.max.apply(null, bars.map(function(b){return b.value;}).concat([1]));
+    var gridY = chartH - padB;
+    var rects = bars.map(function(b, idx){
+      var h = Math.round((b.value / maxVal) * (chartH - padB - 18));
+      var x = padL + idx*(barW+barGap);
+      var y = gridY - h;
+      var label = b.label.length > 10 ? b.label.slice(0,9)+"…" : b.label;
+      return '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+Math.max(h,2)+'" rx="4" fill="'+(b.color||"var(--accent)")+'"></rect>' +
+        '<text x="'+(x+barW/2)+'" y="'+(chartH-8)+'" text-anchor="middle" fill="var(--text-dim)" font-size="9.5" font-family="var(--font-mono)">'+esc(label)+'</text>';
+    }).join("");
+    if (!bars.length) return '<div class="empty-state">No data yet.</div>';
+    return '<svg viewBox="0 0 '+chartW+' '+chartH+'" style="width:100%;height:auto;max-width:'+chartW+'px;">' +
+      '<line x1="'+padL+'" y1="'+gridY+'" x2="'+chartW+'" y2="'+gridY+'" stroke="var(--line)"></line>' + rects + '</svg>';
+  }
+
+  function usageBucketKey(ts, bucket){
+    var d = new Date(ts);
+    if (bucket === "Hour") return ts.slice(0,13) + ":00";
+    if (bucket === "Week"){
+      var onejan = new Date(d.getFullYear(),0,1);
+      var week = Math.ceil((((d - onejan) / 86400000) + onejan.getDay()+1)/7);
+      return d.getFullYear() + "-W" + String(week).padStart(2,"0");
+    }
+    if (bucket === "Month") return ts.slice(0,7);
+    if (bucket === "Year") return ts.slice(0,4);
+    return ts.slice(0,10); // Day
+  }
+  function ingredientQtyFromSale(sale, ingredientId){
+    var qty = 0;
+    sale.items.forEach(function(li){
+      var mi = menuItemById(li.itemId);
+      if (!mi || !mi.recipe) return;
+      mi.recipe.forEach(function(r){
+        if (r.itemId === ingredientId) qty += r.qty * li.qty;
+      });
+    });
+    return qty;
+  }
+  function windowStartISO(win){
+    var d = new Date();
+    if (win === "Today") d.setHours(0,0,0,0);
+    else if (win === "This Week") d.setDate(d.getDate() - 7);
+    else if (win === "This Month") d.setDate(d.getDate() - 30);
+    else d.setDate(d.getDate() - 365); // This Year
+    return d.toISOString();
+  }
+
+  function renderAnalytics(){
+    var branchOpts = ["All"].concat(BRANCHES).map(function(b){
+      return '<option value="'+esc(b)+'"'+(b===analyticsBranch?" selected":"")+'>'+esc(b)+'</option>';
+    }).join("");
+    var visBranches = analyticsBranch === "All" ? BRANCHES : [analyticsBranch];
+
+    // --- Section 1: current stock position ---
+    var stockBars = [];
+    items.forEach(function(it){
+      var q = visBranches.reduce(function(a,b){ return a + stockQty(b, it.id); }, 0);
+      var color = q < (it.minStock||0) ? "var(--bad)" : (it.maxStock && q > it.maxStock) ? "var(--warn)" : "var(--accent)";
+      stockBars.push({label: it.name, value: q, color: color});
+    });
+    stockBars.sort(function(a,b){ return b.value-a.value; });
+
+    // --- Section 2: top ingredients used, in the selected window ---
+    var since = windowStartISO(analyticsWindow);
+    var usageTotals = {};
+    activeSales().forEach(function(s){
+      if (s.ts < since) return;
+      if (analyticsBranch !== "All" && s.branch !== analyticsBranch) return;
+      items.forEach(function(it){
+        var q = ingredientQtyFromSale(s, it.id);
+        if (q) usageTotals[it.id] = (usageTotals[it.id]||0) + q;
+      });
+    });
+    var topBars = Object.keys(usageTotals).map(function(id){
+      var it = itemById(id);
+      return {label: it?it.name:id, value: usageTotals[id], unit: it?it.unit:""};
+    }).sort(function(a,b){ return b.value-a.value; }).slice(0,10);
+
+    // --- Section 3: usage trend for one ingredient, bucketed over time ---
+    if (!analyticsIngredientId && items.length) analyticsIngredientId = items[0].id;
+    var trendBuckets = {};
+    activeSales().forEach(function(s){
+      if (analyticsBranch !== "All" && s.branch !== analyticsBranch) return;
+      var q = ingredientQtyFromSale(s, analyticsIngredientId);
+      if (!q) return;
+      var key = usageBucketKey(s.ts, analyticsBucket);
+      trendBuckets[key] = (trendBuckets[key]||0) + q;
+    });
+    var trendBars = Object.keys(trendBuckets).sort().map(function(k){
+      return {label: k, value: trendBuckets[k]};
+    });
+    var ingOptions = items.map(function(it){
+      return '<option value="'+it.id+'"'+(it.id===analyticsIngredientId?" selected":"")+'>'+esc(it.name)+'</option>';
+    }).join("");
+    var bucketOpts = ["Hour","Day","Week","Month","Year"].map(function(bk){
+      return '<option value="'+bk+'"'+(bk===analyticsBucket?" selected":"")+'>'+bk+'</option>';
+    }).join("");
+    var windowOpts = ["Today","This Week","This Month","This Year"].map(function(w){
+      return '<option value="'+esc(w)+'"'+(w===analyticsWindow?" selected":"")+'>'+w+'</option>';
+    }).join("");
+    var selectedIng = itemById(analyticsIngredientId);
+
+    return (
+      '<div class="view-head"><div><h2>Usage &amp; Stock Analytics</h2><div class="view-sub">Derived live from checkout sales and each menu item\'s recipe</div></div>' +
+        '<select id="anBranch">'+branchOpts+'</select>' +
+      '</div>' +
+
+      '<div class="card" style="margin-bottom:20px;"><h3 style="margin-bottom:4px;">Current stock position</h3>' +
+        '<div class="tile-sub" style="margin-bottom:12px;">This is today\'s figure as of right now — it becomes the day\'s closing stock once trading ends. Red = below minimum, amber = above maximum.</div>' +
+        barChartSvg(stockBars) +
+      '</div>' +
+
+      '<div class="card" style="margin-bottom:20px;">' +
+        '<div class="view-head" style="margin-bottom:4px;"><h3>Top ingredients used</h3><select id="anWindow">'+windowOpts+'</select></div>' +
+        (analyticsWindow === "This Month" || analyticsWindow === "This Year" ? '<div class="tile-sub" style="margin-bottom:10px;">Sales history currently goes back 30 days, so "'+analyticsWindow+'" shows everything on record so far, not a full '+(analyticsWindow==="This Year"?"year":"month")+' yet.</div>' : '') +
+        barChartSvg(topBars) +
+        (topBars.length ? '<div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Ingredient</th><th style="text-align:right;">Used</th></tr></thead><tbody>' +
+          topBars.map(function(b){ return '<tr><td>'+esc(b.label)+'</td><td class="num mono">'+b.value.toFixed(2)+' '+esc(b.unit)+'</td></tr>'; }).join("") +
+        '</tbody></table></div>' : '') +
+      '</div>' +
+
+      '<div class="card">' +
+        '<div class="view-head" style="margin-bottom:4px;"><h3>Usage trend</h3>' +
+          '<div style="display:flex;gap:8px;"><select id="anIngredient">'+ingOptions+'</select><select id="anBucket">'+bucketOpts+'</select></div>' +
+        '</div>' +
+        '<div class="tile-sub" style="margin-bottom:12px;">' + (selectedIng?esc(selectedIng.name):"") + ' consumed per ' + analyticsBucket.toLowerCase() +
+          ((analyticsBucket==="Month"||analyticsBucket==="Year") ? ' — sales history currently only goes back 30 days' : '') + '</div>' +
+        barChartSvg(trendBars) +
+      '</div>'
+    );
+  }
+
+  // ------------------------------------------------------------- checkout --
+  function renderCheckout(){
+    if (!checkoutBranch || BRANCHES.indexOf(checkoutBranch) === -1) checkoutBranch = session.branch || BRANCHES[0] || "";
+    var branchOptions = visibleBranches().map(function(b){
+      return '<option value="'+esc(b)+'"' + (b===checkoutBranch?" selected":"") + '>'+esc(b)+'</option>';
+    }).join("");
+
+    var itemCards = menuItems.map(function(mi){
+      var maxQ = maxMakeable(checkoutBranch, mi);
+      var disabled = maxQ <= 0;
+      var meta;
+      if (!disabled){
+        meta = maxQ + " makeable now";
+      } else if (!mi.recipe || !mi.recipe.length){
+        meta = "No recipe set";
+      } else {
+        var short = limitingIngredient(checkoutBranch, mi);
+        meta = "Out of " + (short ? short.name : "an ingredient");
+      }
+      return '<button class="item-card" data-add="'+mi.id+'" '+(disabled?"disabled":"")+'>' +
+        '<div class="item-name">'+esc(mi.name)+'</div>' +
+        '<div class="item-meta">'+ esc(meta) +'</div>' +
+        '<div class="item-price mono">'+money(mi.price||0)+'</div>' +
+      '</button>';
+    }).join("") || '<div class="empty-state">No menu items yet — add some from the Menu screen.</div>';
+
+    var total = cart.reduce(function(a,l){ return a + l.price*l.qty; }, 0);
+    var totalQty = cart.reduce(function(a,l){ return a + l.qty; }, 0);
+    var invoiceRows = cart.length ? cart.map(function(l){
+      return '<tr><td>'+esc(l.name)+'</td>' +
+        '<td class="num mono"><span class="qty-stepper" style="justify-content:flex-end;">' +
+          '<button data-cart-dec="'+l.itemId+'">−</button><span class="mono">'+l.qty+'</span><button data-cart-inc="'+l.itemId+'">+</button>' +
+        '</span></td>' +
+        '<td class="num mono">'+money(l.price)+'</td>' +
+        '<td class="num mono">'+money(l.price*l.qty)+'</td>' +
+        '<td><button class="remove-x" data-cart-remove="'+l.itemId+'">✕</button></td></tr>';
+    }).join("") : '';
+
+    var paidTotal = paymentMethods.reduce(function(a,pm){ return a + (parseFloat(checkoutPayments[pm.name])||0); }, 0);
+    var change = paidTotal - total;
+    var canCharge = cart.length && paidTotal >= total;
+    var paymentRows = paymentMethods.map(function(pm){
+      var amt = parseFloat(checkoutPayments[pm.name]) || 0;
+      return '<button type="button" class="pay-row '+(checkoutActiveMethod===pm.name?"active":"")+'" data-pay-row="'+esc(pm.name)+'">' +
+        '<span>'+esc(pm.name)+'</span><span class="mono">'+money(amt)+'</span>' +
+      '</button>';
+    }).join("") || '<div class="tile-sub">No payment methods set up — add some in Settings.</div>';
+
+    var now = new Date();
+    var topbar = '<div class="pos-topbar"><b>' + esc(checkoutBranch) + '</b>' +
+      '<span>' + now.toLocaleDateString(undefined, {weekday:"short", year:"numeric", month:"short", day:"numeric"}) + '</span>' +
+      '<span>Cashier: ' + esc(session.username) + '</span></div>';
+
+    var recentSales = salesRecent.filter(function(s){ return s.branch === checkoutBranch; })
+      .sort(function(a,b){ return b.ts.localeCompare(a.ts); }).slice(0, 8);
+    var recentRows = recentSales.map(function(s){
+      var summary = s.items.map(function(li){ return li.qty+"× "+li.name; }).join(", ");
+      var actionCell = s.voided
+        ? '<span class="pill pill-bad">voided</span>'
+        : (canVoidSale(s) ? '<button class="btn btn-danger btn-sm" data-void-sale="'+s.id+'">Void</button>' : "");
+      return '<tr' + (s.voided ? ' style="opacity:.5;"' : '') + '>' +
+        '<td class="mono">' + new Date(s.ts).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}) + '</td>' +
+        '<td>' + esc(summary) + '</td>' +
+        '<td class="num mono">' + money(s.total) + '</td>' +
+        '<td>' + esc(s.cashier) + '</td>' +
+        '<td>' + actionCell + '</td></tr>';
+    }).join("");
+    var recentSalesCard = '<div class="card" style="margin-top:20px;"><h3 style="margin-bottom:10px;">Recent sales — ' + esc(checkoutBranch) + '</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>Time</th><th>Items</th><th style="text-align:right;">Total</th><th>Cashier</th><th></th></tr></thead><tbody>' +
+        (recentRows || '<tr><td colspan="5" class="empty-state">No sales recorded yet.</td></tr>') +
+      '</tbody></table></div></div>';
+
+    return (
+      '<div class="view-head"><div><h2>Checkout</h2><div class="view-sub">Ring up a sale — stock updates live for every branch</div></div>' +
+        (isMaster() ? '<select id="checkoutBranchSel" class="field" style="width:auto;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);">'+branchOptions+'</select>' : '') +
+      '</div>' +
+      topbar +
+      '<div class="checkout-layout">' +
+        '<div class="item-grid">' + itemCards + '</div>' +
+        '<div class="cart">' +
+          '<h3>Invoice</h3>' +
+          (cart.length ?
+            '<div class="table-wrap"><table class="invoice-table"><thead><tr><th>Item</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Price</th><th style="text-align:right;">Total</th><th></th></tr></thead>' +
+            '<tbody>' + invoiceRows + '</tbody>' +
+            '<tfoot><tr><td>' + totalQty + ' item(s)</td><td></td><td></td><td class="num mono">' + money(total) + '</td><td></td></tr></tfoot>' +
+            '</table></div>'
+            : '<div class="cart-empty">Tap a menu item to start the invoice.</div>') +
+
+          '<div class="pay-rows" style="margin-top:14px;">' + paymentRows + '</div>' +
+          '<div class="keypad">' +
+            '<button data-kp="7">7</button><button data-kp="8">8</button><button data-kp="9">9</button><button class="kp-clear" data-kp="back">⌫</button>' +
+            '<button data-kp="4">4</button><button data-kp="5">5</button><button data-kp="6">6</button><button class="kp-clear" data-kp="clear">C</button>' +
+            '<button data-kp="1">1</button><button data-kp="2">2</button><button data-kp="3">3</button><button data-kp="exact">Exact</button>' +
+            '<button class="kp-zero" data-kp="0">0</button>' +
+          '</div>' +
+          (paymentMethods.length ? '<div class="tile-sub">Keypad types into <b style="color:var(--text);">'+esc(checkoutActiveMethod||"—")+'</b> — tap another method to switch. "Exact" fills what\'s left to reach the total.</div>' : '') +
+
+          '<div class="totals-panel">' +
+            '<div class="trow total"><span>Total</span><span class="tval mono">'+money(total)+'</span></div>' +
+            '<div class="trow"><span>Paid</span><span class="mono">'+money(paidTotal)+'</span></div>' +
+            '<div class="trow change"><span>Change</span><span class="tval mono" style="color:'+(change<0?"var(--bad)":"var(--good)")+';">'+money(Math.max(change,0))+'</span></div>' +
+            (change<0 && paidTotal>0 ? '<div class="tile-sub" style="color:var(--bad);">Short by '+money(-change)+'</div>' : '') +
+          '</div>' +
+
+          '<button class="btn btn-primary btn-block" id="completeSaleBtn" '+(canCharge?"":"disabled")+'>Pay &amp; Print Receipt</button>' +
+          (cart.length ? '<button class="btn btn-ghost btn-block btn-sm" id="clearCartBtn">Clear</button>' : '') +
+        '</div>' +
+      '</div>' +
+      recentSalesCard
+    );
+  }
+
+  function addToCart(menuItemId){
+    var mi = menuItemById(menuItemId);
+    if (!mi) return;
+    var maxQty = maxMakeable(checkoutBranch, mi);
+    var line = cart.filter(function(l){ return l.itemId===menuItemId; })[0];
+    if (line){
+      if (line.qty < maxQty) line.qty++;
+    } else if (maxQty > 0) {
+      cart.push({itemId: menuItemId, name: mi.name, price: mi.price||0, qty:1});
+    }
+    render();
+  }
+  function changeCartQty(menuItemId, delta){
+    var line = cart.filter(function(l){ return l.itemId===menuItemId; })[0];
+    if (!line) return;
+    var mi = menuItemById(menuItemId);
+    var maxQty = mi ? maxMakeable(checkoutBranch, mi) : line.qty;
+    line.qty = Math.max(1, Math.min(maxQty, line.qty + delta));
+    render();
+  }
+  function removeFromCart(itemId){
+    cart = cart.filter(function(l){ return l.itemId !== itemId; });
+    render();
+  }
+
+  function completeSale(){
+    if (busy || !cart.length) return;
+    busy = true;
+    var branch = checkoutBranch;
+    var lines = cart.slice();
+
+    var total = lines.reduce(function(a,l){ return a+l.price*l.qty; }, 0);
+    var payments = paymentMethods.map(function(pm){
+      return { method: pm.name, amount: parseFloat(checkoutPayments[pm.name]) || 0 };
+    }).filter(function(p){ return p.amount > 0; });
+    var paidTotal = payments.reduce(function(a,p){ return a+p.amount; }, 0);
+    if (paidTotal < total){
+      busy = false;
+      setBanner("bad", "Amount paid is less than the total.");
+      return;
+    }
+
+    api("/api/sales", {
+      method: "POST",
+      body: {
+        branch: branch,
+        cashier: session.username,
+        mode: "pay",
+        payments: payments,
+        cartLines: lines.map(function(l){ return { menuItemId: l.itemId, name: l.name, qty: l.qty }; })
+      }
+    }).then(function(sale){
+      receiptData = sale;
+      cart = [];
+      checkoutPayments = {};
+      busy = false;
+      fetchState();
+    }).catch(function(err){
+      busy = false;
+      setBanner("bad", err.message || "Could not complete the sale. Try again.");
+    });
+  }
+
+  function renderReceipt(){
+    var r = receiptData;
+    var lines = r.items.map(function(l){
+      return '<div class="rline"><span>'+l.qty+' × '+esc(l.name)+'</span><span>'+money(l.subtotal)+'</span></div>';
+    }).join("");
+    return '<div class="overlay"><div class="receipt">' +
+      '<h3>🌯 Taste Twist</h3>' +
+      '<div class="rline"><span>' + esc(r.branch) + '</span><span>' + new Date(r.ts).toLocaleString() + '</span></div>' +
+      '<div class="rline"><span>Served by</span><span>' + esc(r.cashier) + '</span></div>' +
+      '<hr>' + lines + '<hr>' +
+      '<div class="rline rtotal"><span>Total</span><span>' + money(r.total) + '</span></div>' +
+      (r.payments||[]).map(function(p){ return '<div class="rline"><span>'+esc(p.method)+'</span><span>'+money(p.amount)+'</span></div>'; }).join("") +
+      '<div class="rline"><span>Change</span><span>' + money(r.change) + '</span></div>' +
+      '<div class="modal-actions"><button class="btn btn-ghost btn-sm" id="printReceiptBtn">Print</button><button class="btn btn-primary btn-sm" id="closeReceiptBtn">New sale</button></div>' +
+    '</div></div>';
+  }
+
+  function canVoidSale(sale){
+    return !!sale && !sale.voided && (isMaster() || sale.branch === session.branch);
+  }
+  function voidSale(id, reason){
+    var sale = salesRecent.filter(function(s){ return s.id===id; })[0];
+    if (!canVoidSale(sale)){ setBanner("bad","That sale can't be voided."); return; }
+    api("/api/sales/" + id + "/void", { method: "POST", body: { reason: reason, voidedBy: session.username } })
+      .then(function(){
+        setBanner("good","Sale voided — stock restored.");
+        fetchState();
+      }).catch(function(err){
+        setBanner("bad","Could not void the sale (" + (err.message||"error") + ").");
+      });
+  }
+
+  // --------------------------------------------------------------- items --
+  function renderItems(){
+    var rows = items.map(function(it){
+      var stockCells = BRANCHES.map(function(b){
+        return '<td class="num mono" data-adjust="'+it.id+'|'+esc(b)+'" style="cursor:pointer;text-decoration:underline dotted;">' + esc(formatQty(it, stockQty(b, it.id))) + '</td>';
+      }).join("");
+      return '<tr><td>' + esc(it.name) + '</td><td>' + esc(it.unit||"") + '</td>' +
+        '<td class="num mono">' + (it.costPrice ? money(it.costPrice) : '—') + '</td>' +
+        '<td class="num mono">' + (it.minStock||0) + '</td>' +
+        '<td class="num mono">' + (it.maxStock || '—') + '</td>' +
+        stockCells +
+        '<td><button class="btn btn-ghost btn-sm" data-edit-item="'+it.id+'">Edit</button> ' +
+        '<button class="btn btn-danger btn-sm" data-delete-item="'+it.id+'">Delete</button></td></tr>';
+    }).join("");
+    var branchHeads = BRANCHES.map(function(b){ return '<th style="text-align:right;">'+esc(b)+'</th>'; }).join("");
+
+    return (
+      '<div class="view-head"><div><h2>Ingredients</h2><div class="view-sub">Raw stock — what Purchases bring in and Menu recipes consume. Click a quantity to adjust it directly.</div></div>' +
+        '<button class="btn btn-primary" id="addItemBtn">+ Add Ingredient</button>' +
+      '</div>' +
+      '<div class="card table-wrap"><table><thead><tr><th>Ingredient</th><th>Unit</th><th style="text-align:right;">Cost</th><th style="text-align:right;">Min stock</th><th style="text-align:right;">Max stock</th>' + branchHeads + '<th></th></tr></thead><tbody>' + (rows||'<tr><td colspan="9" class="empty-state">No ingredients yet.</td></tr>') + '</tbody></table></div>'
+    );
+  }
+
+  function saveItem(data, editId){
+    var p = editId
+      ? api("/api/items/" + editId, { method: "PUT", body: data })
+      : api("/api/items", { method: "POST", body: data });
+    p.then(function(){ modal = null; fetchState(); })
+     .catch(function(err){ setBanner("bad", "Could not save item (" + (err.message||"error") + ")."); });
+  }
+  function deleteItem(id){
+    api("/api/items/" + id, { method: "DELETE" })
+      .then(function(){ fetchState(); })
+      .catch(function(){ setBanner("bad","Could not delete item."); });
+  }
+  function adjustStock(itemId, branch, delta){
+    var have = stockQty(branch, itemId);
+    var next = Math.max(0, have + delta);
+    api("/api/stock/" + encodeURIComponent(branch) + "/" + itemId, { method: "PUT", body: { qty: next } })
+      .then(function(){ fetchState(); })
+      .catch(function(){ setBanner("bad","Could not update stock."); });
+  }
+
+  // ----------------------------------------------------------------- menu --
+  function renderMenu(){
+    var rows = menuItems.map(function(mi){
+      return '<tr><td>' + esc(mi.name) + '</td><td class="num mono">' + money(mi.price||0) + '</td>' +
+        '<td style="font-size:12px;color:var(--text-dim);">' + esc(recipeSummary(mi)) + '</td>' +
+        '<td><button class="btn btn-ghost btn-sm" data-edit-menu="'+mi.id+'">Edit</button> ' +
+        '<button class="btn btn-danger btn-sm" data-delete-menu="'+mi.id+'">Delete</button></td></tr>';
+    }).join("");
+    return (
+      '<div class="view-head"><div><h2>Menu</h2><div class="view-sub">What customers actually buy — price plus the ingredients each serving consumes</div></div>' +
+        '<button class="btn btn-primary" id="addMenuBtn">+ Add Menu Item</button>' +
+      '</div>' +
+      '<div class="card table-wrap"><table><thead><tr><th>Menu item</th><th style="text-align:right;">Price</th><th>Recipe</th><th></th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="4" class="empty-state">No menu items yet.</td></tr>') +
+      '</tbody></table></div>'
+    );
+  }
+  function saveMenuItem(name, price, editId){
+    if (!name){ setBanner("bad","Enter a name."); return; }
+    if (!menuFormRecipe.length){ setBanner("bad","Add at least one ingredient to the recipe."); return; }
+    var payload = { name: name, price: price, recipe: menuFormRecipe.slice() };
+    var p = editId ? api("/api/menu-items/"+editId, {method:"PUT", body:payload}) : api("/api/menu-items", {method:"POST", body:payload});
+    p.then(function(){ modal=null; menuFormRecipe=[]; fetchState(); })
+     .catch(function(err){ setBanner("bad","Could not save menu item (" + (err.message||"error") + ")."); });
+  }
+  function deleteMenuItem(id){
+    var mi = menuItemById(id);
+    askConfirm("Delete " + (mi?mi.name:"this menu item") + "?", function(){
+      api("/api/menu-items/"+id, {method:"DELETE"}).then(fetchState).catch(function(){ setBanner("bad","Could not delete menu item."); });
+    });
+  }
+
+  // ------------------------------------------------------------ purchases --
+  function renderPurchases(){
+    if (!purchaseBranch || BRANCHES.indexOf(purchaseBranch) === -1) purchaseBranch = visibleBranches()[0];
+    var branchOptions = visibleBranches().map(function(b){
+      return '<option value="'+esc(b)+'"' + (b===purchaseBranch?" selected":"") + '>'+esc(b)+'</option>';
+    }).join("");
+    var itemOptions = items.map(function(it){ return '<option value="'+it.id+'">'+esc(it.name)+'</option>'; }).join("");
+    var supplierList = suppliers.map(function(s){ return '<option value="'+esc(s.name)+'">'; }).join("");
+
+    var lineRows = purchaseCart.map(function(l){
+      return '<tr><td>' + esc(l.name) + '</td><td class="num mono">' + l.qty + '</td>' +
+        '<td class="num mono">' + money(l.cost) + '</td><td class="num mono">' + money(l.cost*l.qty) + '</td>' +
+        '<td><button class="remove-x" data-po-remove="'+l.itemId+'">✕</button></td></tr>';
+    }).join("");
+    var poTotal = purchaseCart.reduce(function(a,l){ return a+l.cost*l.qty; }, 0);
+
+    var visibleHistory = isMaster() ? purchasesRecent : purchasesRecent.filter(function(p){ return p.branch===session.branch; });
+    var historyRows = visibleHistory.map(function(p){
+      var summary = p.items.map(function(l){ return l.qty+"× "+l.name; }).join(", ");
+      return '<tr><td class="mono">' + new Date(p.ts).toLocaleDateString() + '</td><td>' + esc(p.branch) + '</td>' +
+        '<td>' + esc(p.supplierName) + '</td><td>' + esc(summary) + '</td><td class="num mono">' + money(p.total) + '</td></tr>';
+    }).join("");
+
+    return (
+      '<div class="view-head"><div><h2>Purchases</h2><div class="view-sub">Record stock coming in from suppliers — updates live quantity and item cost</div></div></div>' +
+      '<div class="card" style="margin-bottom:20px;">' +
+        '<div class="form-grid" style="margin-bottom:14px;">' +
+          '<div class="field"><label>Branch</label><select id="poBranch">'+branchOptions+'</select></div>' +
+          '<div class="field"><label>Supplier</label><input id="poSupplier" list="supplierList" placeholder="Supplier name" value="'+esc(purchaseSupplierDraft)+'"><datalist id="supplierList">'+supplierList+'</datalist></div>' +
+        '</div>' +
+        '<div class="line-form">' +
+          '<div class="field"><label>Item</label><select id="poItem">'+itemOptions+'</select></div>' +
+          '<div class="field" style="min-width:90px;"><label>Qty</label><input id="poQty" type="number" min="1" step="1"></div>' +
+          '<div class="field" style="min-width:120px;"><label>Cost each (₦)</label><input id="poCost" type="number" min="0" step="1"></div>' +
+          '<button class="btn btn-ghost" id="poAddLineBtn" type="button">+ Add line</button>' +
+        '</div>' +
+        (purchaseCart.length ? '<div class="table-wrap"><table><thead><tr><th>Item</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Cost</th><th style="text-align:right;">Subtotal</th><th></th></tr></thead><tbody>'+lineRows+'</tbody></table></div>' : '<div class="empty-state">Add items to this delivery above.</div>') +
+        '<div class="cart-total-row"><span class="cart-total-label">Purchase total</span><span class="cart-total-value mono">'+money(poTotal)+'</span></div>' +
+        '<button class="btn btn-primary" id="poSubmitBtn" '+(purchaseCart.length?"":"disabled")+'>Record Purchase</button>' +
+      '</div>' +
+      '<h3 style="margin-bottom:10px;">Purchase history</h3>' +
+      '<div class="card table-wrap"><table><thead><tr><th>Date</th><th>Branch</th><th>Supplier</th><th>Items</th><th style="text-align:right;">Total</th></tr></thead><tbody>' +
+        (historyRows || '<tr><td colspan="5" class="empty-state">No purchases recorded yet.</td></tr>') +
+      '</tbody></table></div>'
+    );
+  }
+  function addPurchaseLine(itemId, qty, cost){
+    var it = itemById(itemId);
+    if (!it || !qty || qty<=0 || cost<0) return;
+    var existing = purchaseCart.filter(function(l){ return l.itemId===itemId; })[0];
+    if (existing){ existing.qty += qty; existing.cost = cost; }
+    else purchaseCart.push({itemId:itemId, name:it.name, qty:qty, cost:cost});
+    render();
+  }
+  function removePurchaseLine(itemId){
+    purchaseCart = purchaseCart.filter(function(l){ return l.itemId!==itemId; });
+    render();
+  }
+  function submitPurchase(supplierName){
+    if (!purchaseCart.length || busy) return;
+    busy = true;
+    var branch = purchaseBranch;
+    var lines = purchaseCart.slice();
+
+    api("/api/purchases", {
+      method: "POST",
+      body: { branch: branch, supplierName: supplierName, recordedBy: session.username, lines: lines }
+    }).then(function(){
+      purchaseCart = [];
+      purchaseSupplierDraft = "";
+      busy = false;
+      setBanner("good","Purchase recorded — stock updated.");
+      fetchState();
+    }).catch(function(err){
+      busy = false;
+      setBanner("bad","Could not record purchase (" + (err.message||"error") + ").");
+    });
+  }
+
+  // -------------------------------------------------------------- settings --
+  function renderSettings(){
+    var branchRows = branchDocs.map(function(b){
+      return '<tr><td>' + esc(b.name) + '</td><td><button class="btn btn-danger btn-sm" data-delete-branch="'+b.id+'">Delete</button></td></tr>';
+    }).join("");
+
+    var payMethodRows = paymentMethods.map(function(pm){
+      return '<tr><td>' + esc(pm.name) + '</td><td><button class="btn btn-danger btn-sm" data-delete-paymethod="'+pm.id+'">Delete</button></td></tr>';
+    }).join("");
+
+    var roleLabel = {master:"Master", staff:"Staff"};
+    var userRows = usersCache.map(function(u){
+      var isSelf = session.username === u.username;
+      return '<tr><td>' + esc(u.username) + (isSelf ? ' <span class="pill pill-dim">you</span>' : '') + '</td>' +
+        '<td>' + (roleLabel[u.role]||u.role) + '</td><td>' + esc(u.branch||"—") + '</td>' +
+        '<td><button class="btn btn-ghost btn-sm" data-edit-user="'+u.id+'">Edit</button> ' +
+        '<button class="btn btn-danger btn-sm" data-delete-user="'+u.id+'">Delete</button></td></tr>';
+    }).join("");
+
+    return (
+      '<div class="view-head"><div><h2>Settings</h2><div class="view-sub">Master-only — branches and staff accounts for the whole business</div></div></div>' +
+      '<div class="card" style="margin-bottom:20px;"><h3 style="margin-bottom:14px;">Branches</h3>' +
+        '<div class="table-wrap" style="margin-bottom:14px;"><table><thead><tr><th>Name</th><th></th></tr></thead><tbody>' +
+          (branchRows || '<tr><td colspan="2" class="empty-state">No branches yet.</td></tr>') +
+        '</tbody></table></div>' +
+        '<div class="line-form" style="margin-bottom:0;"><div class="field"><label>New branch name</label><input id="newBranchName" placeholder="e.g. Ojota"></div>' +
+          '<button class="btn btn-primary" id="addBranchBtn" type="button">+ Add branch</button></div>' +
+        '<div class="tile-sub" style="margin-top:10px;">Branch names can\'t be renamed once created (it would orphan existing stock records) — delete and re-add instead.</div>' +
+      '</div>' +
+      '<div class="card" style="margin-bottom:20px;"><h3 style="margin-bottom:14px;">Payment Methods</h3>' +
+        '<div class="table-wrap" style="margin-bottom:14px;"><table><thead><tr><th>Name</th><th></th></tr></thead><tbody>' +
+          (payMethodRows || '<tr><td colspan="2" class="empty-state">No payment methods yet.</td></tr>') +
+        '</tbody></table></div>' +
+        '<div class="line-form" style="margin-bottom:0;"><div class="field"><label>New payment method</label><input id="newPayMethodName" placeholder="e.g. PalmPay"></div>' +
+          '<button class="btn btn-primary" id="addPayMethodBtn" type="button">+ Add method</button></div>' +
+        '<div class="tile-sub" style="margin-top:10px;">These are the channels shown at Checkout when a sale is paid now (not on credit).</div>' +
+      '</div>' +
+      '<div class="card"><div class="view-head" style="margin-bottom:14px;"><h3>Users</h3><button class="btn btn-primary btn-sm" id="addUserBtn">+ Add User</button></div>' +
+        '<div class="table-wrap"><table><thead><tr><th>Username</th><th>Role</th><th>Branch</th><th></th></tr></thead><tbody>' +
+          (userRows || '<tr><td colspan="4" class="empty-state">No users yet.</td></tr>') +
+        '</tbody></table></div>' +
+      '</div>'
+    );
+  }
+  function addBranch(name){
+    if (!name){ setBanner("bad","Enter a branch name."); return; }
+    api("/api/branches", {method:"POST", body:{name:name}})
+      .then(function(){ fetchState(); })
+      .catch(function(err){ setBanner("bad", err.message || "Could not add branch."); });
+  }
+  function deleteBranch(id){
+    var b = branchDocs.filter(function(x){ return x.id===id; })[0];
+    askConfirm("Delete " + (b?b.name:"this branch") + "? Its stock and sales history stays in the database but it disappears from Checkout and every dropdown.", function(){
+      api("/api/branches/"+id, {method:"DELETE"}).then(fetchState).catch(function(){ setBanner("bad","Could not delete branch."); });
+    });
+  }
+  function addPaymentMethod(name){
+    if (!name){ setBanner("bad","Enter a payment method name."); return; }
+    api("/api/payment-methods", {method:"POST", body:{name:name}})
+      .then(function(){ fetchState(); })
+      .catch(function(err){ setBanner("bad", err.message || "Could not add payment method."); });
+  }
+  function deletePaymentMethod(id){
+    var pm = paymentMethods.filter(function(p){ return p.id===id; })[0];
+    askConfirm("Delete " + (pm?pm.name:"this payment method") + "?", function(){
+      api("/api/payment-methods/"+id, {method:"DELETE"}).then(fetchState).catch(function(){ setBanner("bad","Could not delete payment method."); });
+    });
+  }
+  function saveUser(data, editId){
+    var p;
+    if (editId){
+      p = api("/api/users/"+editId, {method:"PUT", body:{password:data.password, role:data.role, branch:data.branch}});
+    } else {
+      if (!data.password){ setBanner("bad","A new user needs a password."); return; }
+      p = api("/api/users", {method:"POST", body:data});
+    }
+    p.then(function(){ modal=null; fetchState(); }).catch(function(err){ setBanner("bad","Could not save user (" + (err.message||"error") + ")."); });
+  }
+  function deleteUser(id){
+    var target = usersCache.filter(function(u){ return u.id===id; })[0];
+    if (target && session.username === target.username){ setBanner("bad","You can't delete the account you're logged in as."); return; }
+    var masterCount = usersCache.filter(function(u){ return u.role==="master"; }).length;
+    if (target && target.role==="master" && masterCount<=1){ setBanner("bad","Can't delete the last Master account."); return; }
+    askConfirm("Delete " + (target?target.username:"this user") + "? They won't be able to log in anymore.", function(){
+      api("/api/users/"+id, {method:"DELETE"}).then(fetchState).catch(function(){ setBanner("bad","Could not delete user."); });
+    });
+  }
+
+  // ----------------------------------------------------------- transfers --
+  function renderTransfers(){
+    var srcOptions = visibleBranches().map(function(b){ return '<option value="'+esc(b)+'">'+esc(b)+'</option>'; }).join("");
+    var itemOptions = items.map(function(it){ return '<option value="'+it.id+'">'+esc(it.name)+'</option>'; }).join("");
+
+    var visible = isMaster() ? transfers : transfers.filter(function(t){ return t.srcBranch===session.branch || t.dstBranch===session.branch; });
+    var rows = visible.map(function(t){
+      var pillClass = t.status==="approved" ? "pill-good" : t.status==="rejected" ? "pill-bad" : "pill-warn";
+      var actions = (isMaster() && t.status==="pending")
+        ? '<button class="btn btn-primary btn-sm" data-approve="'+t.id+'">Approve</button> <button class="btn btn-danger btn-sm" data-reject="'+t.id+'">Reject</button>'
+        : "";
+      return '<tr><td class="mono">' + new Date(t.requestedAt).toLocaleDateString() + '</td>' +
+        '<td>' + esc(t.srcBranch) + '</td><td>' + esc(t.dstBranch) + '</td><td>' + esc(t.itemName) + '</td>' +
+        '<td class="num mono">' + t.qty + '</td>' +
+        '<td><span class="pill '+pillClass+'">' + t.status + '</span></td><td>' + actions + '</td></tr>';
+    }).join("");
+
+    return (
+      '<div class="view-head"><div><h2>Stock Transfers</h2><div class="view-sub">Move stock between branches — approvals update live quantities instantly</div></div></div>' +
+      '<div class="card" style="margin-bottom:20px;"><h3 style="margin-bottom:14px;">Request a transfer</h3>' +
+      '<form id="transferForm" class="form-grid">' +
+        '<div class="field"><label>From</label><select id="tfSrc">'+srcOptions+'</select></div>' +
+        '<div class="field"><label>To</label><select id="tfDst"></select></div>' +
+        '<div class="field"><label>Item</label><select id="tfItem">'+itemOptions+'</select></div>' +
+        '<div class="field"><label>Quantity</label><input id="tfQty" type="number" min="1" step="1"></div>' +
+        '<div class="field" style="align-self:end;"><button class="btn btn-primary btn-block" type="submit">Submit request</button></div>' +
+      '</form></div>' +
+      '<div class="card table-wrap"><table><thead><tr><th>Date</th><th>From</th><th>To</th><th>Item</th><th style="text-align:right;">Qty</th><th>Status</th><th></th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="7" class="empty-state">No transfers yet.</td></tr>') +
+      '</tbody></table></div>'
+    );
+  }
+  function syncTfDst(){
+    var srcSel = document.getElementById("tfSrc"), dstSel = document.getElementById("tfDst");
+    if (!srcSel || !dstSel) return;
+    var remaining = BRANCHES.filter(function(b){ return b !== srcSel.value; });
+    dstSel.innerHTML = remaining.map(function(b){ return '<option value="'+esc(b)+'">'+esc(b)+'</option>'; }).join("");
+  }
+  function submitTransfer(src, dst, itemId, qty){
+    var it = itemById(itemId);
+    api("/api/transfers", {method:"POST", body:{
+      srcBranch: src, dstBranch: dst, itemId: itemId, itemName: it?it.name:"", qty: qty, requestedBy: session.username
+    }}).then(function(){ setBanner("good","Transfer request submitted."); fetchState(); })
+      .catch(function(){ setBanner("bad","Could not submit transfer."); });
+  }
+  function decideTransfer(id, approve){
+    api("/api/transfers/"+id+"/decide", {method:"POST", body:{approve: approve}})
+      .then(function(){ setBanner(approve?"good":"good", approve?"Transfer approved.":"Transfer rejected."); fetchState(); })
+      .catch(function(err){ setBanner("bad", err.message || "Could not process transfer."); });
+  }
+
+  // ------------------------------------------------------------- reports --
+  function renderReports(){
+    if (!reportState.from) reportState.from = new Date(Date.now()-30*24*3600*1000).toISOString().slice(0,10);
+    if (!reportState.to) reportState.to = todayISO();
+    if (!isMaster()) reportState.branch = session.branch;
+
+    var filtered = activeSales().filter(function(s){
+      var d = (s.ts||"").slice(0,10);
+      if (d < reportState.from || d > reportState.to) return false;
+      if (reportState.branch !== "All" && s.branch !== reportState.branch) return false;
+      return true;
+    });
+
+    function periodOf(ts){
+      var d = new Date(ts);
+      if (reportState.groupBy === "Monthly") return ts.slice(0,7);
+      if (reportState.groupBy === "Weekly"){
+        var onejan = new Date(d.getFullYear(),0,1);
+        var week = Math.ceil((((d - onejan) / 86400000) + onejan.getDay()+1)/7);
+        return d.getFullYear() + "-W" + String(week).padStart(2,"0");
+      }
+      return ts.slice(0,10);
+    }
+
+    var buckets = {};
+    filtered.forEach(function(s){
+      var period = periodOf(s.ts);
+      s.items.forEach(function(li){
+        var key = period + "|" + s.branch + "|" + li.name;
+        if (!buckets[key]) buckets[key] = {period:period, branch:s.branch, item:li.name, qty:0, revenue:0};
+        buckets[key].qty += li.qty;
+        buckets[key].revenue += li.subtotal;
+      });
+    });
+    var rows = Object.keys(buckets).map(function(k){ return buckets[k]; }).sort(function(a,b){ return b.period.localeCompare(a.period); });
+    var totalRevenue = filtered.reduce(function(a,s){ return a+s.total; }, 0);
+
+    var branchOpts = ["All"].concat(BRANCHES).map(function(b){
+      return '<option value="'+esc(b)+'"'+(b===reportState.branch?" selected":"")+'>'+esc(b)+'</option>';
+    }).join("");
+    var groupOpts = ["Daily","Weekly","Monthly"].map(function(g){
+      return '<option value="'+g+'"'+(g===reportState.groupBy?" selected":"")+'>'+g+'</option>';
+    }).join("");
+
+    var tableRows = rows.map(function(r){
+      return '<tr><td class="mono">'+esc(r.period)+'</td><td>'+esc(r.branch)+'</td><td>'+esc(r.item)+'</td>' +
+        '<td class="num mono">'+r.qty+'</td><td class="num mono">'+money(r.revenue)+'</td></tr>';
+    }).join("");
+
+    return (
+      '<div class="view-head"><div><h2>Reports</h2><div class="view-sub">Sales aggregated from live checkout transactions</div></div></div>' +
+      '<div class="tiles" style="grid-template-columns:repeat(auto-fit,minmax(160px,220px));">' +
+        '<div class="tile"><div class="tile-label">Revenue in range</div><div class="tile-value accent">'+money(totalRevenue)+'</div></div>' +
+        '<div class="tile"><div class="tile-label">Transactions</div><div class="tile-value">'+filtered.length+'</div></div>' +
+      '</div>' +
+      '<div class="toolbar">' +
+        (isMaster() ? '<select id="repBranch">'+branchOpts+'</select>' : '') +
+        '<select id="repGroup">'+groupOpts+'</select>' +
+        '<input id="repFrom" type="date" value="'+reportState.from+'">' +
+        '<input id="repTo" type="date" value="'+reportState.to+'">' +
+        '<button class="btn btn-ghost btn-sm" id="exportCsvBtn">Export CSV</button>' +
+      '</div>' +
+      '<div class="card table-wrap"><table><thead><tr><th>' + reportState.groupBy + '</th><th>Branch</th><th>Item</th><th style="text-align:right;">Qty sold</th><th style="text-align:right;">Revenue</th></tr></thead><tbody>' +
+        (tableRows || '<tr><td colspan="5" class="empty-state">No sales in this range yet.</td></tr>') +
+      '</tbody></table></div>'
+    );
+  }
+  function exportCsv(){
+    var rows = document.querySelectorAll("#app table tbody tr");
+    var head = ["Period","Branch","Item","QtySold","Revenue"];
+    var lines = [head.join(",")];
+    rows.forEach(function(tr){
+      var cells = Array.prototype.map.call(tr.querySelectorAll("td"), function(td){ return '"' + td.textContent.trim().replace(/"/g,'""') + '"'; });
+      if (cells.length === 5) lines.push(cells.join(","));
+    });
+    var csv = lines.join("\n");
+    var blob = new Blob([csv], { type: "text/csv" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "taste-twist-report.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // -------------------------------------------------------------- modals --
+  function renderModal(){
+    if (modal.type === "confirm"){
+      return '<div class="modal-backdrop"><div class="modal">' +
+        '<h3>Please confirm</h3>' +
+        '<div class="tile-sub" style="margin-bottom:20px;font-size:13.5px;">' + esc(modal.message) + '</div>' +
+        '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modalCancel">Cancel</button><button type="button" class="btn btn-danger" id="confirmYesBtn">Delete</button></div>' +
+      '</div></div>';
+    }
+    if (modal.type === "numprompt"){
+      var fieldsHtml = modal.fields.map(function(f, i){
+        return '<div class="field"><label>'+esc(f.label)+'</label><input type="number" step="0.01" id="npField'+i+'" value="'+(f.value!=null?f.value:0)+'" autofocus></div>';
+      }).join("");
+      return '<div class="modal-backdrop"><div class="modal">' +
+        '<h3>'+esc(modal.title||"Enter a value")+'</h3>' +
+        '<form id="numPromptForm">' + fieldsHtml +
+          '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modalCancel">Cancel</button><button class="btn btn-primary" type="submit">OK</button></div>' +
+        '</form>' +
+      '</div></div>';
+    }
+    if (modal.type === "void"){
+      var vs = salesRecent.filter(function(x){ return x.id===modal.saleId; })[0];
+      return '<div class="modal-backdrop"><div class="modal">' +
+        '<h3>Void sale</h3>' +
+        (vs ? '<div class="tile-sub" style="margin-bottom:14px;">' + new Date(vs.ts).toLocaleString() + ' — ' + money(vs.total) + '<br>' + esc(vs.items.map(function(li){ return li.qty+"× "+li.name; }).join(", ")) + '</div>' : '') +
+        '<form id="voidForm">' +
+          '<div class="field"><label>Reason</label><select id="voidReason">' +
+            '<option>Wrong item rung up</option>' +
+            '<option>Wrong quantity</option>' +
+            '<option>Customer changed their mind</option>' +
+            '<option>Duplicate entry</option>' +
+            '<option>Other</option>' +
+          '</select></div>' +
+          '<div class="tile-sub">This restores the ingredients back into stock and marks the sale voided — it stays on record for audit, it isn\'t deleted.</div>' +
+          '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modalCancel">Cancel</button><button class="btn btn-danger" type="submit">Void &amp; restore stock</button></div>' +
+        '</form>' +
+      '</div></div>';
+    }
+    if (modal.type === "item"){
+      var editing = modal.editId ? itemById(modal.editId) : null;
+      return '<div class="modal-backdrop"><div class="modal">' +
+        '<h3>'+(editing?"Edit ingredient":"Add ingredient")+'</h3>' +
+        '<form id="itemForm">' +
+          '<div class="field"><label>Name</label><input id="itName" value="'+esc(modal.draftName)+'" '+(editing?"disabled":"")+'></div>' +
+          '<div class="form-grid">' +
+            '<div class="field"><label>Unit</label><input id="itUnit" value="'+esc(modal.draftUnit)+'" placeholder="kg, piece, loaf"></div>' +
+            '<div class="field"><label>Min stock</label><input id="itMin" type="number" min="0" step="1" value="'+esc(modal.draftMin)+'"></div>' +
+            '<div class="field"><label>Max stock (optional)</label><input id="itMax" type="number" min="0" step="1" value="'+esc(modal.draftMax)+'" placeholder="Flag as excess above this"></div>' +
+            '<div class="field"><label>Pieces per pack (optional)</label><input id="itPiecesPerPack" type="number" min="0" step="1" value="'+esc(modal.draftPPP)+'" placeholder="e.g. 10 — for items counted as packs + loose pieces"></div>' +
+          '</div>' +
+          '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modalCancel">Cancel</button><button class="btn btn-primary" type="submit">Save</button></div>' +
+        '</form>' +
+      '</div></div>';
+    }
+    if (modal.type === "menu"){
+      var ingOptions = items.map(function(it){ return '<option value="'+it.id+'">'+esc(it.name)+'</option>'; }).join("");
+      var recipeRows = menuFormRecipe.map(function(r){
+        var ing = itemById(r.itemId);
+        return '<tr><td>'+esc(ing?ing.name:r.itemId)+'</td><td class="num mono">'+r.qty+' '+esc(ing?ing.unit:"")+'</td>' +
+          '<td><button type="button" class="remove-x" data-recipe-remove="'+r.itemId+'">✕</button></td></tr>';
+      }).join("");
+      return '<div class="modal-backdrop"><div class="modal" style="max-width:480px;">' +
+        '<h3>'+(modal.editId?"Edit menu item":"Add menu item")+'</h3>' +
+        '<form id="menuForm">' +
+          '<div class="form-grid" style="margin-bottom:14px;">' +
+            '<div class="field"><label>Name</label><input id="miName" value="'+esc(modal.draftName||"")+'"></div>' +
+            '<div class="field"><label>Price (₦)</label><input id="miPrice" type="number" min="0" step="1" value="'+esc(modal.draftPrice||"")+'"></div>' +
+          '</div>' +
+          '<label style="display:block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;">Recipe — ingredients used per serving</label>' +
+          (recipeRows ? '<div class="table-wrap" style="margin-bottom:10px;"><table><tbody>'+recipeRows+'</tbody></table></div>' : '<div class="empty-state" style="padding:10px;">No ingredients added yet.</div>') +
+          '<div class="line-form">' +
+            '<div class="field"><label>Ingredient</label><select id="miIngredient">'+ingOptions+'</select></div>' +
+            '<div class="field" style="min-width:110px;"><label>Qty per serving</label><input id="miIngQty" type="number" min="0" step="0.01"></div>' +
+            '<button type="button" class="btn btn-ghost" id="miAddIngBtn">+ Add</button>' +
+          '</div>' +
+          '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modalCancel">Cancel</button><button class="btn btn-primary" type="submit">Save</button></div>' +
+        '</form>' +
+      '</div></div>';
+    }
+    if (modal.type === "user"){
+      var editingU = modal.editId ? usersCache.filter(function(u){ return u.id===modal.editId; })[0] : null;
+      var branchOpts = BRANCHES.map(function(b){
+        return '<option value="'+esc(b)+'"'+(editingU && editingU.branch===b?" selected":"")+'>'+esc(b)+'</option>';
+      }).join("");
+      return '<div class="modal-backdrop"><div class="modal">' +
+        '<h3>'+(editingU?"Edit user":"Add user")+'</h3>' +
+        '<form id="userForm">' +
+          '<div class="field"><label>Username</label><input id="usrName" value="'+esc(editingU?editingU.username:"")+'" '+(editingU?"disabled":"")+'></div>' +
+          '<div class="field"><label>Password'+(editingU?" (leave blank to keep current)":"")+'</label><input id="usrPass" type="password"></div>' +
+          '<div class="form-grid">' +
+            '<div class="field"><label>Role</label><select id="usrRole">' +
+              '<option value="staff"'+(editingU && editingU.role==="staff"?" selected":"")+'>Staff</option>' +
+              '<option value="master"'+(editingU && editingU.role==="master"?" selected":"")+'>Master</option>' +
+            '</select></div>' +
+            '<div class="field"><label>Branch (staff only)</label><select id="usrBranch">'+branchOpts+'</select></div>' +
+          '</div>' +
+          '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modalCancel">Cancel</button><button class="btn btn-primary" type="submit">Save</button></div>' +
+        '</form>' +
+      '</div></div>';
+    }
+    return "";
+  }
+
+  // ------------------------------------------------------------- render! --
+  function render(){
+    var app = document.getElementById("app");
+    if (!session){
+      app.innerHTML = renderLogin();
+      wireLogin();
+      return;
+    }
+    app.innerHTML = renderShell();
+    wireShell();
+  }
+
+  function wireShell(){
+    document.querySelectorAll("[data-nav]").forEach(function(btn){
+      btn.addEventListener("click", function(){ view = btn.getAttribute("data-nav"); render(); });
+    });
+    var logout = document.getElementById("logoutBtn");
+    if (logout) logout.addEventListener("click", function(){ session=null; cart=[]; view="dashboard"; render(); });
+
+    // checkout
+    var branchSel = document.getElementById("checkoutBranchSel");
+    if (branchSel) branchSel.addEventListener("change", function(){ checkoutBranch = branchSel.value; cart=[]; render(); });
+    document.querySelectorAll("[data-add]").forEach(function(el){
+      el.addEventListener("click", function(){ addToCart(el.getAttribute("data-add")); });
+    });
+    document.querySelectorAll("[data-cart-inc]").forEach(function(el){ el.addEventListener("click", function(){ changeCartQty(el.getAttribute("data-cart-inc"), 1); }); });
+    document.querySelectorAll("[data-cart-dec]").forEach(function(el){ el.addEventListener("click", function(){ changeCartQty(el.getAttribute("data-cart-dec"), -1); }); });
+    document.querySelectorAll("[data-cart-remove]").forEach(function(el){ el.addEventListener("click", function(){ removeFromCart(el.getAttribute("data-cart-remove")); }); });
+    document.querySelectorAll("[data-pay-row]").forEach(function(el){
+      el.addEventListener("click", function(){ checkoutActiveMethod = el.getAttribute("data-pay-row"); render(); });
+    });
+    document.querySelectorAll("[data-kp]").forEach(function(el){
+      el.addEventListener("click", function(){
+        if (!checkoutActiveMethod) return;
+        var k = el.getAttribute("data-kp");
+        var cur = checkoutPayments[checkoutActiveMethod] || "";
+        if (k === "clear") checkoutPayments[checkoutActiveMethod] = "";
+        else if (k === "back") checkoutPayments[checkoutActiveMethod] = cur.slice(0, -1);
+        else if (k === "exact") {
+          var total = cart.reduce(function(a,l){ return a+l.price*l.qty; }, 0);
+          var others = paymentMethods.reduce(function(a,pm){
+            return pm.name===checkoutActiveMethod ? a : a + (parseFloat(checkoutPayments[pm.name])||0);
+          }, 0);
+          checkoutPayments[checkoutActiveMethod] = String(Math.max(0, total - others));
+        }
+        else checkoutPayments[checkoutActiveMethod] = (cur === "0" ? "" : cur) + k;
+        render();
+      });
+    });
+    var completeBtn = document.getElementById("completeSaleBtn");
+    if (completeBtn) completeBtn.addEventListener("click", completeSale);
+    var clearBtn = document.getElementById("clearCartBtn");
+    if (clearBtn) clearBtn.addEventListener("click", function(){ cart=[]; checkoutPayments={}; render(); });
+    var printBtn = document.getElementById("printReceiptBtn");
+    if (printBtn) printBtn.addEventListener("click", function(){ window.print(); });
+    var closeReceipt = document.getElementById("closeReceiptBtn");
+    if (closeReceipt) closeReceipt.addEventListener("click", function(){ receiptData=null; render(); });
+    document.querySelectorAll("[data-void-sale]").forEach(function(el){
+      el.addEventListener("click", function(){ modal={type:"void", saleId: el.getAttribute("data-void-sale")}; render(); });
+    });
+    var voidForm = document.getElementById("voidForm");
+    if (voidForm) voidForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var saleId = modal.saleId;
+      var reason = document.getElementById("voidReason").value;
+      modal = null;
+      voidSale(saleId, reason);
+    });
+
+    // ledger
+    var ledgerBranchSel = document.getElementById("ledgerBranchSel");
+    if (ledgerBranchSel) ledgerBranchSel.addEventListener("change", function(){ ledgerBranch = ledgerBranchSel.value; ledgerRows = null; render(); });
+    var ledgerDateInput = document.getElementById("ledgerDateInput");
+    if (ledgerDateInput) ledgerDateInput.addEventListener("change", function(){ ledgerDate = ledgerDateInput.value; ledgerRows = null; render(); });
+    var loadLedgerBtn = document.getElementById("loadLedgerBtn");
+    if (loadLedgerBtn) loadLedgerBtn.addEventListener("click", loadLedger);
+    var saveLedgerBtn = document.getElementById("saveLedgerBtn");
+    if (saveLedgerBtn) saveLedgerBtn.addEventListener("click", saveLedger);
+    document.querySelectorAll("[data-ledger-edit]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var parts = el.getAttribute("data-ledger-edit").split("|");
+        var itemId = parts[0], field = parts[1];
+        var row = ledgerRows[itemId];
+        promptAbsoluteQty(itemById(itemId), row[field], "New " + field, function(n){
+          row[field] = round2(n);
+          if (field !== "closing") row.closing = round2(row.opening + row.stockIn - row.used);
+          render();
+        });
+      });
+    });
+
+    // items
+    var addItemBtn = document.getElementById("addItemBtn");
+    if (addItemBtn) addItemBtn.addEventListener("click", function(){
+      modal = {type:"item", draftName:"", draftUnit:"", draftMin:10, draftMax:"", draftPPP:""};
+      render();
+    });
+    document.querySelectorAll("[data-edit-item]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var it = itemById(el.getAttribute("data-edit-item"));
+        modal = {type:"item", editId: el.getAttribute("data-edit-item"),
+          draftName: it?it.name:"", draftUnit: it?it.unit:"", draftMin: it?it.minStock:10,
+          draftMax: (it&&it.maxStock)?it.maxStock:"", draftPPP: (it&&it.piecesPerPack)?it.piecesPerPack:""};
+        render();
+      });
+    });
+    document.querySelectorAll("[data-delete-item]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var id = el.getAttribute("data-delete-item");
+        var it = itemById(id);
+        askConfirm("Delete " + (it?it.name:"this item") + "? This removes its stock records too.", function(){ deleteItem(id); });
+      });
+    });
+    document.querySelectorAll("[data-adjust]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var parts = el.getAttribute("data-adjust").split("|");
+        promptDeltaQty(itemById(parts[0]), function(n){
+          if (n && n !== 0) adjustStock(parts[0], parts[1], n);
+        });
+      });
+    });
+    ["itName","itUnit","itMin","itMax","itPiecesPerPack"].forEach(function(fid){
+      var el = document.getElementById(fid);
+      if (el) el.addEventListener("input", function(){
+        if (!modal) return;
+        if (fid==="itName") modal.draftName = el.value;
+        else if (fid==="itUnit") modal.draftUnit = el.value;
+        else if (fid==="itMin") modal.draftMin = el.value;
+        else if (fid==="itMax") modal.draftMax = el.value;
+        else if (fid==="itPiecesPerPack") modal.draftPPP = el.value;
+      });
+    });
+    var itemForm = document.getElementById("itemForm");
+    if (itemForm) itemForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var editing = modal.editId ? itemById(modal.editId) : null;
+      saveItem({
+        name: editing ? editing.name : document.getElementById("itName").value.trim(),
+        unit: document.getElementById("itUnit").value.trim(),
+        minStock: parseFloat(document.getElementById("itMin").value) || 0,
+        maxStock: parseFloat(document.getElementById("itMax").value) || null,
+        piecesPerPack: parseFloat(document.getElementById("itPiecesPerPack").value) || null
+      }, modal.editId);
+    });
+    var modalCancel = document.getElementById("modalCancel");
+    if (modalCancel) modalCancel.addEventListener("click", function(){ modal=null; render(); });
+    var confirmYesBtn = document.getElementById("confirmYesBtn");
+    if (confirmYesBtn) confirmYesBtn.addEventListener("click", function(){
+      var cb = modal.onConfirm;
+      modal = null;
+      render();
+      if (cb) cb();
+    });
+    var numPromptForm = document.getElementById("numPromptForm");
+    if (numPromptForm) numPromptForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var vals = modal.fields.map(function(f, i){ return parseFloat(document.getElementById("npField"+i).value); });
+      var cb = modal.onSubmit;
+      modal = null;
+      render();
+      if (cb) cb(vals);
+    });
+
+    // transfers
+    var srcSel = document.getElementById("tfSrc");
+    if (srcSel){ syncTfDst(); srcSel.addEventListener("change", syncTfDst); }
+    var tfForm = document.getElementById("transferForm");
+    if (tfForm) tfForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var qty = parseFloat(document.getElementById("tfQty").value);
+      if (!qty || qty <= 0){ setBanner("bad","Enter a quantity greater than zero."); return; }
+      submitTransfer(document.getElementById("tfSrc").value, document.getElementById("tfDst").value, document.getElementById("tfItem").value, qty);
+    });
+    document.querySelectorAll("[data-approve]").forEach(function(el){ el.addEventListener("click", function(){ decideTransfer(el.getAttribute("data-approve"), true); }); });
+    document.querySelectorAll("[data-reject]").forEach(function(el){ el.addEventListener("click", function(){ decideTransfer(el.getAttribute("data-reject"), false); }); });
+
+    // menu
+    var addMenuBtn = document.getElementById("addMenuBtn");
+    if (addMenuBtn) addMenuBtn.addEventListener("click", function(){
+      menuFormRecipe = [];
+      modal = {type:"menu", draftName:"", draftPrice:""};
+      render();
+    });
+    document.querySelectorAll("[data-edit-menu]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var mi = menuItemById(el.getAttribute("data-edit-menu"));
+        menuFormRecipe = mi && mi.recipe ? mi.recipe.slice() : [];
+        modal = {type:"menu", editId: el.getAttribute("data-edit-menu"), draftName: mi?mi.name:"", draftPrice: mi?mi.price:""};
+        render();
+      });
+    });
+    document.querySelectorAll("[data-delete-menu]").forEach(function(el){
+      el.addEventListener("click", function(){ deleteMenuItem(el.getAttribute("data-delete-menu")); });
+    });
+    var miAddIngBtn = document.getElementById("miAddIngBtn");
+    if (miAddIngBtn) miAddIngBtn.addEventListener("click", function(){
+      var itemId = document.getElementById("miIngredient").value;
+      var qty = parseFloat(document.getElementById("miIngQty").value);
+      modal.draftName = document.getElementById("miName").value;
+      modal.draftPrice = document.getElementById("miPrice").value;
+      if (!qty || qty<=0){ setBanner("bad","Enter a quantity greater than zero."); return; }
+      var existing = menuFormRecipe.filter(function(r){ return r.itemId===itemId; })[0];
+      if (existing) existing.qty = qty; else menuFormRecipe.push({itemId:itemId, qty:qty});
+      render();
+    });
+    document.querySelectorAll("[data-recipe-remove]").forEach(function(el){
+      el.addEventListener("click", function(){
+        modal.draftName = document.getElementById("miName").value;
+        modal.draftPrice = document.getElementById("miPrice").value;
+        menuFormRecipe = menuFormRecipe.filter(function(r){ return r.itemId !== el.getAttribute("data-recipe-remove"); });
+        render();
+      });
+    });
+    var menuForm = document.getElementById("menuForm");
+    if (menuForm) menuForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var name = document.getElementById("miName").value.trim();
+      var price = parseFloat(document.getElementById("miPrice").value) || 0;
+      saveMenuItem(name, price, modal.editId);
+    });
+
+    // purchases
+    var poBranchSel = document.getElementById("poBranch");
+    if (poBranchSel) poBranchSel.addEventListener("change", function(){ purchaseBranch = poBranchSel.value; render(); });
+    var poAddLineBtn = document.getElementById("poAddLineBtn");
+    if (poAddLineBtn) poAddLineBtn.addEventListener("click", function(){
+      var itemId = document.getElementById("poItem").value;
+      var qty = parseFloat(document.getElementById("poQty").value);
+      var cost = parseFloat(document.getElementById("poCost").value);
+      purchaseSupplierDraft = document.getElementById("poSupplier").value;
+      if (!qty || qty<=0){ setBanner("bad","Enter a quantity greater than zero."); return; }
+      if (isNaN(cost) || cost<0){ setBanner("bad","Enter a valid cost."); return; }
+      addPurchaseLine(itemId, qty, cost);
+    });
+    document.querySelectorAll("[data-po-remove]").forEach(function(el){
+      el.addEventListener("click", function(){ removePurchaseLine(el.getAttribute("data-po-remove")); });
+    });
+    var poSubmitBtn = document.getElementById("poSubmitBtn");
+    if (poSubmitBtn) poSubmitBtn.addEventListener("click", function(){
+      submitPurchase(document.getElementById("poSupplier").value.trim());
+    });
+
+    // settings
+    var addBranchBtn = document.getElementById("addBranchBtn");
+    if (addBranchBtn) addBranchBtn.addEventListener("click", function(){
+      addBranch(document.getElementById("newBranchName").value.trim());
+    });
+    document.querySelectorAll("[data-delete-branch]").forEach(function(el){
+      el.addEventListener("click", function(){ deleteBranch(el.getAttribute("data-delete-branch")); });
+    });
+    var addPayMethodBtn = document.getElementById("addPayMethodBtn");
+    if (addPayMethodBtn) addPayMethodBtn.addEventListener("click", function(){
+      addPaymentMethod(document.getElementById("newPayMethodName").value.trim());
+    });
+    document.querySelectorAll("[data-delete-paymethod]").forEach(function(el){
+      el.addEventListener("click", function(){ deletePaymentMethod(el.getAttribute("data-delete-paymethod")); });
+    });
+    var addUserBtn = document.getElementById("addUserBtn");
+    if (addUserBtn) addUserBtn.addEventListener("click", function(){ modal={type:"user"}; render(); });
+    document.querySelectorAll("[data-edit-user]").forEach(function(el){
+      el.addEventListener("click", function(){ modal={type:"user", editId: el.getAttribute("data-edit-user")}; render(); });
+    });
+    document.querySelectorAll("[data-delete-user]").forEach(function(el){
+      el.addEventListener("click", function(){ deleteUser(el.getAttribute("data-delete-user")); });
+    });
+    var userForm = document.getElementById("userForm");
+    if (userForm) userForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var editingU = modal.editId ? usersCache.filter(function(u){ return u.id===modal.editId; })[0] : null;
+      saveUser({
+        username: editingU ? editingU.username : document.getElementById("usrName").value.trim(),
+        password: document.getElementById("usrPass").value,
+        role: document.getElementById("usrRole").value,
+        branch: document.getElementById("usrBranch").value
+      }, modal.editId);
+    });
+
+    // analytics
+    var anBranch = document.getElementById("anBranch");
+    if (anBranch) anBranch.addEventListener("change", function(){ analyticsBranch = anBranch.value; render(); });
+    var anWindow = document.getElementById("anWindow");
+    if (anWindow) anWindow.addEventListener("change", function(){ analyticsWindow = anWindow.value; render(); });
+    var anIngredient = document.getElementById("anIngredient");
+    if (anIngredient) anIngredient.addEventListener("change", function(){ analyticsIngredientId = anIngredient.value; render(); });
+    var anBucket = document.getElementById("anBucket");
+    if (anBucket) anBucket.addEventListener("change", function(){ analyticsBucket = anBucket.value; render(); });
+
+    // reports
+    var repBranch = document.getElementById("repBranch");
+    if (repBranch) repBranch.addEventListener("change", function(){ reportState.branch = repBranch.value; render(); });
+    var repGroup = document.getElementById("repGroup");
+    if (repGroup) repGroup.addEventListener("change", function(){ reportState.groupBy = repGroup.value; render(); });
+    var repFrom = document.getElementById("repFrom");
+    if (repFrom) repFrom.addEventListener("change", function(){ reportState.from = repFrom.value; render(); });
+    var repTo = document.getElementById("repTo");
+    if (repTo) repTo.addEventListener("change", function(){ reportState.to = repTo.value; render(); });
+    var exportBtn = document.getElementById("exportCsvBtn");
+    if (exportBtn) exportBtn.addEventListener("click", exportCsv);
+  }
+})();
+</script>
+
+</body></html>
