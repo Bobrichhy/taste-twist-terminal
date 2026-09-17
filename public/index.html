@@ -317,13 +317,43 @@
   .line-form{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:16px;}
   .line-form .field{margin-bottom:0;min-width:140px;}
 
+  .mobile-menu-btn{display:none;}
+  .rail-backdrop{display:none;}
   @media (max-width: 880px){
     .shell{flex-direction:column;}
-    .rail{width:100%;flex-direction:row;overflow-x:auto;align-items:center;}
-    .rail-spacer{display:none;}
+    .mobile-menu-btn{
+      display:flex;align-items:center;justify-content:center;
+      position:fixed;top:16px;left:16px;z-index:40;width:46px;height:46px;border-radius:50%;
+      background:linear-gradient(160deg, var(--glass-sheen), transparent 45%), var(--glass-bg);
+      backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+      border:1px solid var(--glass-border);box-shadow:var(--shadow-md);color:var(--text);
+    }
+    .mobile-menu-btn svg{width:20px;height:20px;}
+    .rail-backdrop{
+      display:block;position:fixed;inset:0;background:rgba(5,9,18,0.6);
+      backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:37;
+      opacity:0;pointer-events:none;transition:opacity .25s ease;
+    }
+    .rail-backdrop.show{opacity:1;pointer-events:auto;}
+    .rail{
+      position:fixed;top:0;left:0;bottom:0;width:80vw;max-width:300px;z-index:38;
+      border-radius:0 22px 22px 0;transform:translateX(-100%);transition:transform .28s ease;
+      overflow-y:auto;
+    }
+    .rail.mobile-open{transform:translateX(0);}
     .checkout-layout{grid-template-columns:1fr;}
     .cart{position:static;max-height:none;}
-    .main{height:auto;}
+    .main{height:auto;padding:78px 18px 28px;}
+    .view-head{flex-direction:column;align-items:flex-start;}
+    .tiles{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));}
+    .item-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
+    .modal{max-width:calc(100vw - 32px);}
+    .form-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width: 460px){
+    .main{padding:74px 14px 24px;}
+    .item-grid{grid-template-columns:repeat(2,1fr);}
+    .keypad button{padding:10px 0;font-size:14px;}
   }
 </style>
 </head>
@@ -468,6 +498,13 @@
     };
     es.onerror = function(){ /* EventSource auto-reconnects on its own */ };
   }
+  (function(){
+    var resizeTimer = null;
+    window.addEventListener("resize", function(){
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function(){ if (session) render(); }, 150);
+    });
+  })();
 
   // ------------------------------------------------------------- helpers --
   function stockQty(branch, itemId){
@@ -629,13 +666,24 @@
     reports: '<path d="M4.5 20V13"/><path d="M11 20V6.5"/><path d="M17.5 20v-8.5"/><path d="M3 20h18"/>',
     analytics: '<path d="M3.5 16l5-5 4 4 7-7"/><path d="M15 8h4.5v4.5"/>',
     settings: '<circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2.7M12 17.8v2.7M4.9 4.9l1.9 1.9M17.2 17.2l1.9 1.9M3.5 12h2.7M17.8 12h2.7M4.9 19.1l1.9-1.9M17.2 6.8l1.9-1.9"/>',
-    logout: '<path d="M9.5 20H6a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 6 4h3.5"/><path d="M15.5 16.5L20 12l-4.5-4.5"/><path d="M20 12H9.5"/>'
+    logout: '<path d="M9.5 20H6a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 6 4h3.5"/><path d="M15.5 16.5L20 12l-4.5-4.5"/><path d="M20 12H9.5"/>',
+    menuBurger: '<path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/>'
   };
   function icon(name){
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (ICON_PATHS[name]||"") + '</svg>';
   }
 
+  function renderStaffPhoneBlock(){
+    return '<div style="max-width:360px;margin:15vh auto 0;text-align:center;">' +
+      '<div class="boot-mark" style="font-size:40px;">🖥️</div>' +
+      '<h2 style="margin-top:14px;">Use the counter device</h2>' +
+      '<div class="view-sub" style="margin-top:8px;">Staff checkout runs on the branch\'s regular screen, not phones. Log in on the laptop/desktop at ' + esc(session.branch||"your branch") + '.</div>' +
+    '</div>';
+  }
+
   var lastRenderedView = null;
+  var mobileNavOpen = false;
+  var MOBILE_BREAKPOINT = 880;
   function renderShell(){
     var isNewView = (view !== lastRenderedView);
     lastRenderedView = view;
@@ -645,8 +693,11 @@
              '<span class="nav-icon">'+icon(n.icon)+'</span>'+n.label+'</button>';
     }).join("");
 
+    var staffOnPhone = !isMaster() && window.innerWidth < MOBILE_BREAKPOINT;
+
     var body;
-    if (view === "dashboard") body = renderDashboard();
+    if (staffOnPhone) body = renderStaffPhoneBlock();
+    else if (view === "dashboard") body = renderDashboard();
     else if (view === "checkout") body = renderCheckout();
     else if (view === "menu") body = isMaster() ? renderMenu() : "<div class=\"empty-state\">Master access only.</div>";
     else if (view === "items") body = renderItems();
@@ -661,7 +712,9 @@
 
     return (
       '<div class="shell">' +
-        '<div class="rail">' +
+        '<button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">'+icon("menuBurger")+'</button>' +
+        '<div class="rail-backdrop'+(mobileNavOpen?" show":"")+'" id="railBackdrop"></div>' +
+        '<div class="rail'+(mobileNavOpen?" mobile-open":"")+'">' +
           '<div class="rail-brand"><span class="brand-mark">🌯</span><span class="rail-brand-text">Taste Twist<br>Terminal</span></div>' +
           '<div class="rail-user">' +
             '<div class="rail-user-name">' + esc(session.username) + '</div>' +
@@ -1037,17 +1090,16 @@
 
     var itemCards = menuItems.map(function(mi){
       var maxQ = maxMakeable(checkoutBranch, mi);
-      var disabled = maxQ <= 0;
       var meta;
-      if (!disabled){
+      if (!mi.recipe || !mi.recipe.length){
+        meta = "No recipe set — sells with no stock impact";
+      } else if (maxQ > 0){
         meta = maxQ + " makeable now";
-      } else if (!mi.recipe || !mi.recipe.length){
-        meta = "No recipe set";
       } else {
         var short = limitingIngredient(checkoutBranch, mi);
-        meta = "Out of " + (short ? short.name : "an ingredient");
+        meta = "Low: " + (short ? short.name : "an ingredient");
       }
-      return '<button class="item-card" data-add="'+mi.id+'" '+(disabled?"disabled":"")+'>' +
+      return '<button class="item-card" data-add="'+mi.id+'">' +
         '<div class="item-name">'+esc(mi.name)+'</div>' +
         '<div class="item-meta">'+ esc(meta) +'</div>' +
         '<div class="item-price mono">'+money(mi.price||0)+'</div>' +
@@ -1143,21 +1195,15 @@
   function addToCart(menuItemId){
     var mi = menuItemById(menuItemId);
     if (!mi) return;
-    var maxQty = maxMakeable(checkoutBranch, mi);
     var line = cart.filter(function(l){ return l.itemId===menuItemId; })[0];
-    if (line){
-      if (line.qty < maxQty) line.qty++;
-    } else if (maxQty > 0) {
-      cart.push({itemId: menuItemId, name: mi.name, price: mi.price||0, qty:1});
-    }
+    if (line) line.qty++;
+    else cart.push({itemId: menuItemId, name: mi.name, price: mi.price||0, qty:1});
     render();
   }
   function changeCartQty(menuItemId, delta){
     var line = cart.filter(function(l){ return l.itemId===menuItemId; })[0];
     if (!line) return;
-    var mi = menuItemById(menuItemId);
-    var maxQty = mi ? maxMakeable(checkoutBranch, mi) : line.qty;
-    line.qty = Math.max(1, Math.min(maxQty, line.qty + delta));
+    line.qty = Math.max(1, line.qty + delta);
     render();
   }
   function removeFromCart(itemId){
@@ -1730,10 +1776,14 @@
 
   function wireShell(){
     document.querySelectorAll("[data-nav]").forEach(function(btn){
-      btn.addEventListener("click", function(){ view = btn.getAttribute("data-nav"); render(); });
+      btn.addEventListener("click", function(){ view = btn.getAttribute("data-nav"); mobileNavOpen = false; render(); });
     });
+    var mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", function(){ mobileNavOpen = !mobileNavOpen; render(); });
+    var railBackdrop = document.getElementById("railBackdrop");
+    if (railBackdrop) railBackdrop.addEventListener("click", function(){ mobileNavOpen = false; render(); });
     var logout = document.getElementById("logoutBtn");
-    if (logout) logout.addEventListener("click", function(){ session=null; cart=[]; view="dashboard"; render(); });
+    if (logout) logout.addEventListener("click", function(){ session=null; cart=[]; view="dashboard"; mobileNavOpen=false; render(); });
 
     // checkout
     var branchSel = document.getElementById("checkoutBranchSel");

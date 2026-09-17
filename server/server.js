@@ -259,39 +259,29 @@ app.post("/api/sales", async (req, res) => {
     const menuById = {};
     miRes.rows.forEach((r) => (menuById[r.id] = rowToMenuItem(r)));
 
+    // A sale is never blocked by stock, on purpose (business decision) — items are always
+    // orderable, and ingredient stock is allowed to go negative to surface the real shortfall
+    // as a Low Stock alert instead of stopping a cashier mid-transaction.
     const consumption = {};
     const lineDocs = [];
     for (const line of cartLines) {
       const mi = menuById[line.menuItemId];
-      if (!mi || !mi.recipe.length) throw Object.assign(new Error(`${line.name} has no recipe set`), { code: "NO_RECIPE" });
-      mi.recipe.forEach((r) => { consumption[r.itemId] = (consumption[r.itemId] || 0) + r.qty * line.qty; });
+      if (!mi) throw Object.assign(new Error(`${line.name} is not a valid menu item`), { code: "BAD_ITEM" });
+      (mi.recipe || []).forEach((r) => { consumption[r.itemId] = (consumption[r.itemId] || 0) + r.qty * line.qty; });
       lineDocs.push({ itemId: line.menuItemId, name: mi.name, qty: line.qty, price: mi.price, subtotal: mi.price * line.qty });
     }
 
     const ingredientIds = Object.keys(consumption);
-    const stockIn = inClause(ingredientIds, 2);
-    const stockRes = await client.query(
-      `SELECT * FROM stock WHERE branch=$1 AND item_id IN ${stockIn.sql} FOR UPDATE`,
-      [branch, ...stockIn.values]
-    );
-    const haveByItem = {};
-    stockRes.rows.forEach((r) => (haveByItem[r.item_id] = Number(r.qty)));
-    const itemsIn = inClause(ingredientIds, 1);
-    const itemsRes = await client.query(`SELECT id, name FROM items WHERE id IN ${itemsIn.sql}`, itemsIn.values);
-    const nameById = {};
-    itemsRes.rows.forEach((r) => (nameById[r.id] = r.name));
-
-    for (const id of ingredientIds) {
-      const have = haveByItem[id] || 0;
-      if (consumption[id] > have) {
-        throw Object.assign(new Error(`Not enough ${nameById[id] || "stock"} left`), { code: "OUT_OF_STOCK" });
+    if (ingredientIds.length) {
+      const stockIn = inClause(ingredientIds, 2);
+      await client.query(`SELECT * FROM stock WHERE branch=$1 AND item_id IN ${stockIn.sql} FOR UPDATE`, [branch, ...stockIn.values]);
+      for (const id of ingredientIds) {
+        await client.query(
+          `INSERT INTO stock (branch, item_id, qty) VALUES ($1,$2,$3)
+           ON CONFLICT (branch, item_id) DO UPDATE SET qty = stock.qty - $4`,
+          [branch, id, -consumption[id], consumption[id]]
+        );
       }
-    }
-    for (const id of ingredientIds) {
-      await client.query(
-        "UPDATE stock SET qty = qty - $3 WHERE branch=$1 AND item_id=$2",
-        [branch, id, consumption[id]]
-      );
     }
 
     const total = lineDocs.reduce((a, l) => a + l.subtotal, 0);
@@ -310,7 +300,7 @@ app.post("/api/sales", async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error(err);
-    res.status(err.code === "OUT_OF_STOCK" || err.code === "NO_RECIPE" ? 409 : 500).json({ error: err.message || "Could not complete the sale" });
+    res.status(err.code === "BAD_ITEM" ? 409 : 500).json({ error: err.message || "Could not complete the sale" });
   } finally {
     client.release();
   }
