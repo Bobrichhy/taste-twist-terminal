@@ -169,10 +169,6 @@
   .btn-block{width:100%;}
   .btn-sm{padding:7px 12px;font-size:12.5px;border-radius:7px;}
   .login-error{background:rgba(224,89,74,0.15);border:1px solid var(--bad);color:#f3c6bc;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:16px;}
-  .creds-box{margin-top:24px;border-top:1px dashed var(--line);padding-top:18px;font-size:12px;color:var(--text-dim);}
-  .creds-box summary{cursor:pointer;font-weight:600;color:var(--gold);}
-  .creds-box table{margin-top:10px;width:100%;border-collapse:collapse;}
-  .creds-box td{padding:3px 6px 3px 0;font-family:var(--font-mono);}
 
   /* ---------- app shell ---------- */
   .shell{display:flex;min-height:100vh;}
@@ -725,9 +721,6 @@
           '<div class="field"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password"></div>' +
           '<button class="btn btn-primary btn-block" type="submit">Log in</button>' +
         '</form>' +
-        '<details class="creds-box"><summary>Demo credentials</summary><table>' +
-          '<tr><td>master</td><td>admin123</td><td>Master</td></tr>' +
-        '</table></details>' +
         '<div class="verse-card"><div class="verse-text">&ldquo;' + esc(verse.text) + '&rdquo;</div><div class="verse-ref">' + esc(verse.ref) + '</div></div>' +
       '</div></div>'
     );
