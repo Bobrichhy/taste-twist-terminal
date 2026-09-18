@@ -72,6 +72,15 @@
     --grad-gold:linear-gradient(135deg, #f6bb66, #e8901f);
     --glass-bg:rgba(30,15,22,0.5);
   }
+  :root[data-theme="mono"]{
+    --bg:#0a0a0a; --surface:#161616; --surface-2:#212121; --surface-3:#2c2c2c; --line:#3a3a3a;
+    --text:#f5f5f5; --text-dim:#9a9a9a;
+    --accent:#e5e5e5; --accent-rgb:229,229,229; --accent-hover:#ffffff; --accent-ink:#111111;
+    --gold:#c9b896; --good:#6b9e76; --warn:#c9a227; --bad:#b5504a;
+    --grad-accent:linear-gradient(135deg, #f5f5f5, #cfcfcf);
+    --grad-gold:linear-gradient(135deg, #d8cead, #c2b48f);
+    --glass-bg:rgba(22,22,22,0.55);
+  }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
@@ -222,6 +231,8 @@
   }
   .rail-verse .verse-text{font-size:11.5px;line-height:1.45;}
   .rail-verse .verse-ref{margin-top:6px;font-size:10px;}
+  .dash-verse{margin:0 0 18px;}
+  .kmft-credit{font-size:10px;color:var(--text-dim);text-align:center;padding:6px 8px 0;letter-spacing:0.03em;}
   .theme-picker{display:flex;gap:8px;padding:2px 8px 14px;}
   .theme-swatch{
     width:20px;height:20px;border-radius:50%;border:2px solid transparent;
@@ -432,17 +443,18 @@
     {id:"flame", name:"Flame", swatch:"#e8632c"},
     {id:"forest", name:"Forest", swatch:"#16b88a"},
     {id:"royal", name:"Royal", swatch:"#8b5cf6"},
-    {id:"sunset", name:"Sunset", swatch:"#e0507a"}
+    {id:"sunset", name:"Sunset", swatch:"#e0507a"},
+    {id:"mono", name:"Mono", swatch:"#e5e5e5"}
   ];
-  var currentTheme = "ocean";
+  var currentTheme = "mono";
   function applyTheme(id){
     currentTheme = id;
     document.documentElement.setAttribute("data-theme", id);
     try { localStorage.setItem("tt-theme", id); } catch(e){}
   }
   (function(){
-    var saved = "ocean";
-    try { saved = localStorage.getItem("tt-theme") || "ocean"; } catch(e){}
+    var saved = "mono";
+    try { saved = localStorage.getItem("tt-theme") || "mono"; } catch(e){}
     applyTheme(saved);
   })();
   var NGN = new Intl.NumberFormat("en-NG", {maximumFractionDigits: 0});
@@ -722,6 +734,7 @@
           '<button class="btn btn-primary btn-block" type="submit">Log in</button>' +
         '</form>' +
         '<div class="verse-card"><div class="verse-text">&ldquo;' + esc(verse.text) + '&rdquo;</div><div class="verse-ref">' + esc(verse.ref) + '</div></div>' +
+        '<div class="kmft-credit">Created by KMFT</div>' +
       '</div></div>'
     );
   }
@@ -840,6 +853,7 @@
           }).join("") + '</div>' +
           '<div class="rail-foot"><span class="live-dot"></span>Live data connected</div>' +
           '<button class="btn btn-ghost btn-block btn-sm" id="logoutBtn"><span class="nav-icon">'+icon("logout")+'</span>Log out</button>' +
+          '<div class="kmft-credit">Created by KMFT</div>' +
         '</div>' +
         '<div class="main' + (isNewView ? ' view-enter' : '') + '">' +
           (banner ? '<div class="banner banner-' + (banner.type==="bad"?"bad":"good") + '">' + esc(banner.text) + '</div>' : '') +
@@ -920,8 +934,10 @@
         '<span class="num mono">' + l.qty + ' / max ' + l.max + '</span></div>';
     }).join("") : '<div class="empty-state">Nothing is over its maximum stock level.' + (items.some(function(it){return it.maxStock;}) ? '' : ' (Set a max stock per ingredient to track this.)') + '</div>';
 
+    var dashVerse = verseOfTheDay();
     return (
       '<div class="view-head"><div><h2>Master Dashboard</h2><div class="view-sub">Live across all branches &mdash; updates as staff ring up sales and input their own stock</div></div></div>' +
+      '<div class="verse-card dash-verse"><div class="verse-text">&ldquo;' + esc(dashVerse.text) + '&rdquo;</div><div class="verse-ref">' + esc(dashVerse.ref) + '</div></div>' +
       '<div class="tiles">' + branchCards + '</div>' +
       '<div class="grid" style="grid-template-columns:1.3fr 1fr;">' +
         '<div class="card"><h3 style="margin-bottom:14px;">Revenue, last 7 days</h3>' + chartSvg + '</div>' +
@@ -944,8 +960,10 @@
         '<td class="num mono">' + esc(formatQty(it, q)) + '</td>' +
         '<td>' + status + '</td></tr>';
     }).join("");
+    var stockVerse = verseOfTheDay();
     return (
       '<div class="view-head"><div><h2>Stock — ' + esc(b) + '</h2><div class="view-sub">Live quantities on hand — record your day\'s Opening, Stock In, Used and Closing in Daily Stock</div></div></div>' +
+      '<div class="verse-card dash-verse"><div class="verse-text">&ldquo;' + esc(stockVerse.text) + '&rdquo;</div><div class="verse-ref">' + esc(stockVerse.ref) + '</div></div>' +
       '<div class="card table-wrap"><table><thead><tr><th>Item</th><th style="text-align:right;">On hand</th><th>Status</th></tr></thead><tbody>' + (rows || '<tr><td colspan="3" class="empty-state">No ingredients yet.</td></tr>') + '</tbody></table></div>'
     );
   }
