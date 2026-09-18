@@ -76,6 +76,27 @@ app.get("/api/state", async (req, res) => {
   }
 });
 
+// Reports needs true historical range (not just the last 30 days /api/state keeps live) —
+// fetched on demand, per query, rather than held in the always-on state payload.
+app.get("/api/sales-range", async (req, res) => {
+  const { from, to, branch } = req.query;
+  if (!from || !to) return res.status(400).json({ error: "from and to dates are required" });
+  try {
+    const params = [from, to + " 23:59:59"];
+    let sql = "SELECT * FROM sales WHERE ts >= $1 AND ts <= $2";
+    if (branch && branch !== "All") {
+      params.push(branch);
+      sql += ` AND branch = $${params.length}`;
+    }
+    sql += " ORDER BY ts DESC LIMIT 5000";
+    const result = await pool.query(sql, params);
+    res.json(result.rows.map(rowToSale));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not load sales history" });
+  }
+});
+
 function rowToItem(r) {
   return { id: r.id, name: r.name, unit: r.unit, minStock: num(r.min_stock), maxStock: num(r.max_stock), piecesPerPack: num(r.pieces_per_pack), costPrice: num(r.cost_price) };
 }

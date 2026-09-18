@@ -407,6 +407,8 @@
   var receiptData = null;  // set right after a completed sale
   var modal = null;        // {type:'item', editId?} etc.
   var reportState = { branch: "All", groupBy: "Daily", from: "", to: "" };
+  var reportSales = null; // null = using the 30-day live window; set once Master loads a real range
+  var reportLoading = false;
   var analyticsBranch = "All";
   var analyticsWindow = "This Week";  // window for "top ingredients used"
   var analyticsBucket = "Day";        // bucket size for the usage-trend chart
@@ -1581,7 +1583,10 @@
     if (!reportState.to) reportState.to = todayISO();
     if (!isMaster()) reportState.branch = session.branch;
 
-    var filtered = activeSales().filter(function(s){
+    // The live state only carries the last 30 days for speed. Until Master explicitly loads
+    // a range, fall back to that in-memory window; reportSales holds a real server query result.
+    var source = reportSales !== null ? reportSales : activeSales();
+    var filtered = source.filter(function(s){
       var d = (s.ts||"").slice(0,10);
       if (d < reportState.from || d > reportState.to) return false;
       if (reportState.branch !== "All" && s.branch !== reportState.branch) return false;
@@ -1635,7 +1640,13 @@
         '<select id="repGroup">'+groupOpts+'</select>' +
         '<input id="repFrom" type="date" value="'+reportState.from+'">' +
         '<input id="repTo" type="date" value="'+reportState.to+'">' +
+        '<button class="btn btn-primary btn-sm" id="loadReportRangeBtn">'+(reportLoading?"Loading…":"Load range")+'</button>' +
         '<button class="btn btn-ghost btn-sm" id="exportCsvBtn">Export CSV</button>' +
+      '</div>' +
+      '<div class="tile-sub" style="margin:-8px 0 16px;">' +
+        (reportSales !== null
+          ? "Showing " + esc(reportState.from) + " to " + esc(reportState.to) + " from the full history."
+          : "Showing the live 30-day window — click Load range to pull the full history for any dates.") +
       '</div>' +
       '<div class="card table-wrap"><table><thead><tr><th>' + reportState.groupBy + '</th><th>Branch</th><th>Item</th><th style="text-align:right;">Qty sold</th><th style="text-align:right;">Revenue</th></tr></thead><tbody>' +
         (tableRows || '<tr><td colspan="5" class="empty-state">No sales in this range yet.</td></tr>') +
@@ -2055,13 +2066,28 @@
 
     // reports
     var repBranch = document.getElementById("repBranch");
-    if (repBranch) repBranch.addEventListener("change", function(){ reportState.branch = repBranch.value; render(); });
+    if (repBranch) repBranch.addEventListener("change", function(){ reportState.branch = repBranch.value; reportSales = null; render(); });
     var repGroup = document.getElementById("repGroup");
     if (repGroup) repGroup.addEventListener("change", function(){ reportState.groupBy = repGroup.value; render(); });
     var repFrom = document.getElementById("repFrom");
-    if (repFrom) repFrom.addEventListener("change", function(){ reportState.from = repFrom.value; render(); });
+    if (repFrom) repFrom.addEventListener("change", function(){ reportState.from = repFrom.value; reportSales = null; render(); });
     var repTo = document.getElementById("repTo");
-    if (repTo) repTo.addEventListener("change", function(){ reportState.to = repTo.value; render(); });
+    if (repTo) repTo.addEventListener("change", function(){ reportState.to = repTo.value; reportSales = null; render(); });
+    var loadReportRangeBtn = document.getElementById("loadReportRangeBtn");
+    if (loadReportRangeBtn) loadReportRangeBtn.addEventListener("click", function(){
+      reportLoading = true;
+      render();
+      var qs = "from=" + encodeURIComponent(reportState.from) + "&to=" + encodeURIComponent(reportState.to) +
+        "&branch=" + encodeURIComponent(reportState.branch);
+      api("/api/sales-range?" + qs).then(function(rows){
+        reportSales = rows.filter(function(s){ return !s.voided; });
+        reportLoading = false;
+        render();
+      }).catch(function(err){
+        reportLoading = false;
+        setBanner("bad", "Could not load report history (" + (err.message||"error") + ").");
+      });
+    });
     var exportBtn = document.getElementById("exportCsvBtn");
     if (exportBtn) exportBtn.addEventListener("click", exportCsv);
   }
